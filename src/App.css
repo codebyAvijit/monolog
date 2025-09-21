@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/* Proxima Nova Black */
+@font-face {
+  font-family: "ProximaNova";
+  src: url("/fonts/proximanova/ProximaNova-Black.woff2") format("woff2"),
+    url("/fonts/proximanova/ProximaNova-Black.woff") format("woff");
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* Proxima Nova Black Italic */
+@font-face {
+  font-family: "ProximaNova";
+  src: url("/fonts/proximanova/ProximaNova-BlackIt.woff2") format("woff2"),
+    url("/fonts/proximanova/ProximaNova-BlackIt.woff") format("woff");
+  font-weight: 900;
+  font-style: italic;
+}
+
+/* Proxima Nova Bold */
+@font-face {
+  font-family: "ProximaNova";
+  src: url("/fonts/proximanova/ProximaNova-Bold.woff2") format("woff2"),
+    url("/fonts/proximanova/ProximaNova-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Proxima Nova Bold Italic */
+@font-face {
+  font-family: "ProximaNova";
+  src: url("/fonts/proximanova/ProximaNova-BoldIt.woff2") format("woff2"),
+    url("/fonts/proximanova/ProximaNova-BoldIt.woff") format("woff");
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Proxima Nova ExtraBold */
+@font-face {
+  font-family: "ProximaNova";
+  src: url("/fonts/proximanova/ProximaNova-ExtraBold.woff2") format("woff2"),
+    url("/fonts/proximanova/ProximaNova-ExtraBold.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+}
+
+/* Proxima Nova Light */
+@font-face {
+  font-family: "ProximaNova";
+  src: url("/fonts/proximanova/ProximaNova-Light.woff2") format("woff2"),
+    url("/fonts/proximanova/ProximaNova-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Proxima Nova Regular */
+@font-face {
+  font-family: "ProximaNova";
+  src: url("/fonts/proximanova/ProximaNova-Regular.woff2") format("woff2"),
+    url("/fonts/proximanova/ProximaNova-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Default font for everything */
+* {
+  font-family: "ProximaNova", sans-serif;
+}
