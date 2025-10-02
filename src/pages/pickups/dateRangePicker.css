@@ -1,0 +1,174 @@
+/* --- dateRangePicker.css (import AFTER rsuite css) --- */
+
+/* Base container: match your MUI look */
+.my-rsuite .rs-picker {
+  width: 334px !important;
+  height: 60px !important;
+  border: 1px solid #e5e7eb !important; /* default gray border */
+  border-radius: 8px !important;
+  background: #fff !important;
+  font-family: ProximaNova, sans-serif !important;
+  box-shadow: none !important;
+}
+
+/* The visible clickable toggle inside the picker */
+.my-rsuite .rs-picker .rs-picker-toggle {
+  height: 60px !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 14px !important;
+  color: #012622 !important;
+  background: transparent !important;
+  border: none !important; /* we control border on wrapper */
+  box-shadow: none !important;
+  line-height: 1 !important;
+  border-radius: 8px !important;
+}
+
+/* Make placeholder and input text look right */
+.my-rsuite .rs-picker-toggle-placeholder,
+.my-rsuite .rs-picker .rs-input {
+  color: #012622 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  font-family: ProximaNova, sans-serif !important;
+  /* text-align: center; */
+  text-align: left;
+}
+
+/* Hover / active / focus states (cover multiple RSuite class patterns) */
+.my-rsuite .rs-picker:hover .rs-picker-toggle,
+.my-rsuite .rs-picker.rs-picker-open .rs-picker-toggle,
+.my-rsuite .rs-picker.rs-picker-focus .rs-picker-toggle,
+.my-rsuite .rs-picker.rs-picker-focused .rs-picker-toggle,
+.my-rsuite .rs-picker-toggle.rs-picker-toggle-active {
+  border: 2px solid #9ca3af !important; /* grey hover */
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Force the caret/clean icons to grey */
+.my-rsuite .rs-picker-toggle-caret,
+.my-rsuite .rs-picker-toggle-clean {
+  color: #6b7280 !important;
+}
+
+/* Remove any default blue focus ring */
+.my-rsuite .rs-picker .rs-picker-toggle:focus,
+.my-rsuite .rs-picker .rs-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Calendar popup container styling */
+.my-rsuite .rs-picker-daterange-menu {
+  border-radius: 8px !important;
+  font-family: ProximaNova, sans-serif !important;
+  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.06) !important;
+}
+
+/* Calendar day hover */
+.my-rsuite .rs-calendar-table-cell .rs-calendar-table-cell-content:hover {
+  background-color: #e5e7eb !important; /* light grey hover */
+  color: #111827 !important;
+}
+
+/* Selected day */
+.my-rsuite .rs-calendar-table-cell-selected .rs-calendar-table-cell-content,
+.my-rsuite
+  .rs-calendar-table-cell-selected:hover
+  .rs-calendar-table-cell-content {
+  background-color: #9ca3af !important; /* grey selected */
+  color: #ffffff !important;
+}
+
+/* Range (between start and end) styling */
+.my-rsuite .rs-calendar-table-cell-in-range .rs-calendar-table-cell-content,
+.my-rsuite .rs-calendar-table-cell-in-range::before {
+  background-color: #f3f4f6 !important; /* very light grey range */
+}
+
+/* Make sure the input-group children don't override borders */
+.my-rsuite .rs-input-group,
+.my-rsuite .rs-input-group .rs-input {
+  background: transparent !important;
+  border: none !important;
+  height: 100% !important;
+  box-shadow: none !important;
+}
+
+/* Keep the month/year header neutral */
+.my-rsuite .rs-calendar .rs-calendar-table thead th,
+.my-rsuite .rs-calendar .rs-calendar-table thead th .rs-calendar-header {
+  color: #111827 !important;
+}
+
+/* If some very specific RSuite rule is still beating you, increase specificity */
+body .my-rsuite .rs-picker .rs-picker-toggle {
+  border: 2px solid #e5e7eb !important;
+}
+
+.rs-calendar-table-cell-selected .rs-calendar-table-cell-content {
+  background-color: #3498ff;
+  background-color: gray;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  color: #fff;
+  color: var(--rs-calendar-date-selected-text);
+}
+
+.rs-btn-link {
+  background-color: transparent;
+  border: none;
+  color: gray;
+  color: gray;
+}
+
+.rs-btn-primary {
+  background-color: gray;
+  /* background-color: var(--rs-btn-primary-bg); */
+  border: none;
+  color: #fff;
+  /* color: var(--rs-btn-primary-text); */
+}
+
+.rs-calendar-table-cell-is-today .rs-calendar-table-cell-content {
+  -webkit-box-shadow: inset 0 0 0 1px #c0c3c6;
+  /* -webkit-box-shadow: inset 0 0 0 1px var(--rs-input-focus-border); */
+  box-shadow: inset 0 0 0 1px #c0c3c6;
+  /* box-shadow: inset 0 0 0 1px var(--rs-input-focus-border); */
+}
+
+.rs-calendar-table-cell-day {
+  color: black;
+}
+
+.rs-picker-daterange-header {
+  /* border-bottom: 1px solid grey; */
+  /* border-bottom: 1px solid var(--rs-border-primary); */
+  font-size: 14px;
+  line-height: 1.42857143;
+  padding: 8px 12px;
+  /* background-color: red; */
+}
+
+.rs-calendar-table-cell-in-range:before {
+  background-color: rgb(from #c8ced3 r g b / 50%);
+  /* background-color: var(--rs-calendar-range-bg);    */
+}
+.rs-input-group:focus-within,
+.rs-input-group:not(.rs-input-group-disabled).rs-input-group-focus {
+  outline: none;
+}
+.rs-picker-daterange-header.rs-picker-tab-active-start:after {
+  border-bottom: none;
+}
+.rs-picker-daterange-header.rs-picker-tab-active-end:after {
+  border-bottom: none;
+}
+
+.rs-btn-primary.rs-btn-disabled,
+.rs-btn-primary:disabled {
+  background-color: #c0c3c6;
+}

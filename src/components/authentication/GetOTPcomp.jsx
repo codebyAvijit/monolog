@@ -1,12 +1,14 @@
+// Import necessary libraries and components
 import React from "react";
-import useFormValidation from "../hooks/useFormValidation";
+import useFormValidation from "../../hooks/useFormValidation";
 import OtpInput from "react-otp-input";
 import { NavLink, useNavigate } from "react-router-dom";
-import LogoComp from "./LogoComp";
+import LogoComp from "../../layouts/LogoComp";
+
 import { Box } from "@mui/system";
-import arrow from "../assets/images/arrow_1.png";
-import tyreLogin from "../assets/images/tyre_login.jpg";
-import iconClock from "../assets/images/iconClock.png";
+import arrow from "../../assets/images/arrow_1.png";
+import tyreLogin from "../../assets/images/tyre_login.jpg";
+import iconClock from "../../assets/images/iconClock.png";
 
 // Validation function
 const validateOTP = (values) => {

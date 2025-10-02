@@ -1,3 +1,4 @@
+// Import necessary libraries and components
 import React from "react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { FormHelperText } from "@mui/material";
@@ -18,7 +19,7 @@ const DatePickerComp = ({
         position: "relative",
         width: width,
         maxWidth: "100%",
-        marginBottom: "26px", // reserve space for helper text
+        // marginBottom: "26px", // reserve space for helper text
       }}
     >
       <DatePicker
@@ -82,6 +83,10 @@ const DatePickerComp = ({
                 fontWeight: "400 !important",
                 fontFamily: "ProximaNova, sans-serif !important",
                 color: "#012622 !important",
+                height: "60px !important",
+              },
+              "& .MuiPickersOutlinedInput-root": {
+                height: "100%",
               },
               "& .MuiInputLabel-root.Mui-error": {
                 color: "#d32f2f !important", // 🚨 red label when error

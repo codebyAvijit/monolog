@@ -1,3 +1,4 @@
+// Import necessary libraries and components
 import React from "react";
 import {
   MenuItem,
@@ -72,7 +73,7 @@ const SelectMenuComp = ({
       position: "relative",
       width: "334px",
       maxWidth: "100%",
-      marginBottom: "26px", // Space for helper text + padding
+      // marginBottom: "26px", // Space for helper text + padding
     }}
   >
     <FormControl

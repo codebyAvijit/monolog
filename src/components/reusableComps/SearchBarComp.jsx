@@ -1,3 +1,4 @@
+// Import necessary libraries and components
 // src/components/SearchBarComp.jsx
 import React from "react";
 import { OutlinedInput, InputAdornment, IconButton } from "@mui/material";

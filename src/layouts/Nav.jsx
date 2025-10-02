@@ -1,3 +1,4 @@
+// Import necessary libraries and components
 import React from "react";
 import { NavLink } from "react-router-dom";
 import LogoComp from "./LogoComp";
@@ -6,7 +7,11 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 const Nav = () => {
   const navLinkClasses = ({ isActive }) =>
     `px-4 py-2 rounded-md transition-colors duration-200
-     ${isActive ? "bg-[#012622] text-white" : "text-black hover:bg-[#012622] hover:text-white"}`;
+     ${
+       isActive
+         ? "bg-[#012622] text-white"
+         : "text-black hover:bg-[#012622] hover:text-white"
+     }`;
 
   return (
     <nav className="w-full bg-white shadow-md px-6 py-3 flex items-center justify-between">
@@ -22,15 +27,15 @@ const Nav = () => {
             Dashboard
           </NavLink>
         </li>
-        
+
         <li>
           <NavLink to="/pickups" className={navLinkClasses}>
             Pickups
           </NavLink>
         </li>
         <li>
-          <NavLink to="/customer" className={navLinkClasses}>
-            Customer
+          <NavLink to="/store" className={navLinkClasses}>
+            Store
           </NavLink>
         </li>
         <li>

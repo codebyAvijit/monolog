@@ -1,15 +1,17 @@
+// Import necessary libraries and components
 import React, { useState } from "react";
-import useFormValidation from "../hooks/useFormValidation";
+import useFormValidation from "../../hooks/useFormValidation";
+
 // import logo from "../assets/images/logo.jpg";
 import { NavLink, useNavigate } from "react-router-dom";
-import tyreLogin from "../assets/images/tyre_login.jpg";
+import tyreLogin from "../../assets/images/tyre_login.jpg";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { InputAdornment, IconButton } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import LogoComp from "./LogoComp";
-import arrow from "../assets/images/arrow_1.png";
+import LogoComp from "../../layouts/LogoComp";
+import arrow from "../../assets/images/arrow_1.png";
 
 const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);

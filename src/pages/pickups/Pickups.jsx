@@ -1,16 +1,15 @@
+// Import necessary libraries and components
 import React from "react";
+import Nav from "../../layouts/Nav";
 import { NavLink, Outlet } from "react-router-dom";
-import Nav from "./Nav";
 
-const Settings = () => {
+const Pickups = () => {
   const tabs = [
-    { name: "SUBSCRIPTION PLAN", path: "subscription" },
-    { name: "DRIVER", path: "driver" },
-    { name: "ROLE", path: "role" },
-    { name: "USER", path: "user" },
-    { name: "POSTCODE", path: "postcode" },
+    { name: "Pick-Ups", path: "subPickups" },
+    { name: "Manage/Schedule Pick-ups", path: "manage" },
+    { name: "Driver Tracking", path: "driverTracking" },
+    { name: "Pick-Ups History", path: "pickupsHistory" },
   ];
-
   return (
     <>
       <Nav />
@@ -41,4 +40,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default Pickups;

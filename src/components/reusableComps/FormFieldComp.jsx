@@ -1,3 +1,4 @@
+// Import necessary libraries and components
 // src/components/reusableComps/FormFieldComp.jsx
 import React from "react";
 import { TextField } from "@mui/material";
@@ -66,6 +67,7 @@ const FormFieldComp = ({
   helperText = "",
   fullWidth = false,
   width = "334px",
+  height = "60px",
   ...rest
 }) => {
   return (
@@ -73,12 +75,14 @@ const FormFieldComp = ({
       style={{
         position: "relative",
         width: fullWidth ? "100%" : width,
-        marginBottom: "26px", // Space for helper text + some padding
+        height: "60px",
+        // marginBottom: "26px", // Space for helper text + some padding
       }}
     >
       <TextField
         placeholder={placeholder}
         name={name}
+        required
         value={value}
         onChange={onChange}
         fullWidth={fullWidth}
@@ -88,7 +92,7 @@ const FormFieldComp = ({
           ...inputBoxSX,
           ...rest.sx,
           width: "100%",
-          height: "60px",
+          height: "60px !important",
         }}
         {...rest}
       />

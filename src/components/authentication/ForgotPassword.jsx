@@ -1,10 +1,11 @@
+// Import necessary libraries and components
 import React, { useState } from "react";
-import useFormValidation from "../hooks/useFormValidation";
+import useFormValidation from "../../hooks/useFormValidation";
 import { Box, TextField } from "@mui/material";
 import { NavLink, useNavigate } from "react-router-dom";
-import LogoComp from "./LogoComp";
-import tyreLogin from "../assets/images/tyre_login.jpg";
-import arrow from "../assets/images/arrow_1.png";
+import LogoComp from "../../layouts/LogoComp";
+import tyreLogin from "../../assets/images/tyre_login.jpg";
+import arrow from "../../assets/images/arrow_1.png";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();

@@ -1,5 +1,6 @@
+// Import necessary libraries and components
 import React from "react";
-import Nav from "./Nav";
+import Nav from "../../layouts/Nav";
 
 const Dashboard = () => {
   return (

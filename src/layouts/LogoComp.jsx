@@ -1,3 +1,4 @@
+// Import necessary libraries and components
 // LogoComp.jsx
 import React from "react";
 import logo from "../assets/images/logo.jpg";

@@ -1,17 +1,23 @@
+// Import necessary libraries and components
 import React, { useState } from "react";
-import useFormValidation from "../hooks/useFormValidation";
+import useFormValidation from "../../hooks/useFormValidation";
 import { NavLink, useNavigate } from "react-router-dom";
-import tyreLogin from "../assets/images/tyre_login.jpg";
+import tyreLogin from "../../assets/images/tyre_login.jpg";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { InputAdornment, IconButton } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import LogoComp from "./LogoComp";
+import LogoComp from "../../layouts/LogoComp";
 
 const validateLogin = (values) => {
   let errors = {};
-  if (!values.email) errors.email = "Email is required";
+  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!values.email) {
+    errors.email = "Email is required";
+  } else if (!regexEmail.test(values.email)) {
+    errors.email = "Invalid email address";
+  }
   if (!values.password) errors.password = "Password is required";
   return errors;
 };
