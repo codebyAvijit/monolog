@@ -17,12 +17,15 @@
     "@mui/system": "^7.3.2",
     "@mui/x-date-pickers": "^8.11.2",
     "@mui/x-date-pickers-pro": "^8.11.2",
+    "@reduxjs/toolkit": "^2.9.0",
     "@tailwindcss/vite": "^4.1.13",
     "dayjs": "^1.11.18",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-otp-input": "^3.1.1",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.3",
+    "rsuite": "^5.83.3",
     "tailwindcss": "^4.1.13"
   },
   "devDependencies": {

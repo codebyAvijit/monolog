@@ -17,8 +17,10 @@ const TableDataComp = ({ columns = [], data = [], actions = [] }) => {
           <tr>
             {columns.map((col, idx) => (
               <th
-                key={col.key ?? idx} // fallback to idx if key is missing
-                className="px-4 text-[16px] font-[400] py-3 text-left"
+                key={col.key ?? idx}
+                className={`px-4 text-[16px] font-[400] py-3 text-left ${
+                  idx === 0 ? "border-r border-gray-300" : ""
+                }`}
               >
                 {col.label}
               </th>
@@ -30,16 +32,19 @@ const TableDataComp = ({ columns = [], data = [], actions = [] }) => {
             )}
           </tr>
         </thead>
+
         <tbody>
-          {paginatedData.map((row) => (
+          {paginatedData.map((row, rowIndex) => (
             <tr
-              key={row.requestId ?? Math.random()} // use stable ID or fallback
+              key={row.driverId ?? row.requestId ?? rowIndex}
               className="border-b"
             >
               {columns.map((col, colIndex) => (
                 <td
                   key={col.key ?? colIndex}
-                  className="px-4 text-[16px] font-[400] py-3"
+                  className={`px-4 text-[16px] font-[400] py-3 ${
+                    colIndex === 0 ? "border-r border-gray-300" : ""
+                  }`}
                 >
                   {typeof col.render === "function"
                     ? col.render(row[col.key], row)
@@ -56,11 +61,11 @@ const TableDataComp = ({ columns = [], data = [], actions = [] }) => {
 
                     return (
                       <button
-                        key={action.label ?? i} // unique key for each button
+                        key={action.label ?? i}
                         className={`${
                           action.color
                             ? action.color
-                            : "text-[rgba(233, 138, 21, 1)] decoration-amber-600 hover:text-black"
+                            : "text-[rgba(233,138,21,1)] hover:text-black"
                         }`}
                         onClick={() => action.onClick?.(row)}
                       >

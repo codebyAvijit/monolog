@@ -21,6 +21,7 @@ import Wtns from "./pages/store/Wtns";
 import Invoices from "./pages/store/Invoices";
 import SubPickups from "./pages/pickups/SubPickups";
 import PickupsHistory from "./pages/pickups/PickupsHistory";
+import ManageSchedulePickups from "./pages/pickups/ManageSchedulePickups";
 
 const App = () => {
   return (
@@ -38,6 +39,7 @@ const App = () => {
           </Route>
           <Route path="/pickups" element={<Pickups />}>
             <Route path="subPickups" element={<SubPickups />} />
+            <Route path="manage" element={<ManageSchedulePickups />} />
             <Route path="pickupsHistory" element={<PickupsHistory />} />
           </Route>
           <Route path="/store" element={<Store />}>

@@ -11,6 +11,7 @@ const DatePickerComp = ({
   width = "334px",
   error = false,
   helperText = "",
+  isActive = false,
   ...props
 }) => {
   return (
