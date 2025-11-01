@@ -3,12 +3,19 @@ import DatePickerComp from "../../components/reusableComps/DatePickerComp";
 import SelectMenuComp from "../../components/reusableComps/SelectMenuComp";
 import ButtonComp from "../../components/reusableComps/ButtonComp";
 import DriverTableDataComp from "../../components/reusableComps/DriverTableDataComp";
+import ManageScheduleAssign from "./ManageScheduleAssign";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const ManageSchedulePickups = () => {
   const [filterPostcodes, setFilterPostcodes] = useState("");
-
   const [filterRequestType, setFilterRequestType] = useState("");
   const [filterStore, setFilterStore] = useState("");
+
+  const navigate = useNavigate();
+
+  //state to render component when next button is clicked
+
+  // const [isNextClicked, setIsNextClicked] = useState(false);
 
   const driverRequests = [
     {
@@ -104,60 +111,73 @@ const ManageSchedulePickups = () => {
     },
   ];
 
+  const handleNext = () => {
+    navigate("/pickups/assign");
+  };
+
   return (
     <>
-      <div className="flex flex-wrap flex-col xl:flex-row gap-5">
-        <DatePickerComp isActive label="Pick-up Date" />
-        <SelectMenuComp
-          label="Postcodes"
-          value={filterPostcodes}
-          onChange={(e) => {
-            setFilterPostcodes(e.target.value);
-          }}
-          options={[
-            { value: "all", label: "All" },
-            { value: "10011", label: "10011" },
-            { value: "10012", label: "10012" },
-          ]}
-        />
-        <SelectMenuComp
-          label="Request Type"
-          value={filterRequestType}
-          onChange={(e) => {
-            setFilterRequestType(e.target.value);
-          }}
-          options={[
-            { value: "all", label: "All" },
-            { value: "standard", label: "Standard" },
-            { value: "express", label: "Express" },
-          ]}
-        />
-        <SelectMenuComp
-          label="Store"
-          value={filterStore}
-          onChange={(e) => {
-            setFilterStore(e.target.value);
-          }}
-          options={[
-            { value: "all", label: "All" },
-            { value: "store1", label: "Store 1" },
-            { value: "store2", label: "Store 2" },
-          ]}
-        />
-      </div>
-      <div className="mt-5">
-        <DriverTableDataComp requests={driverRequests} />
-      </div>
-      <div className="mt-5 text-center">
-        <ButtonComp
-          sx={{
-            width: "114px",
-            borderRadius: "6px",
-          }}
-        >
-          Next
-        </ButtonComp>
-      </div>
+      {/* {!isNextClicked ? ( */}
+      <>
+        <div className="flex flex-wrap gap-4 w-full">
+          <div className="w-full sm:w-[334px]">
+            <DatePickerComp isActive label="Pick-up Date" />
+          </div>
+          <div className="w-full sm:w-[334px]">
+            <SelectMenuComp
+              label="Postcodes"
+              value={filterPostcodes}
+              onChange={(e) => setFilterPostcodes(e.target.value)}
+              options={[
+                { value: "all", label: "All" },
+                { value: "10011", label: "10011" },
+                { value: "10012", label: "10012" },
+              ]}
+            />
+          </div>
+          <div className="w-full sm:w-[334px]">
+            <SelectMenuComp
+              label="Request Type"
+              value={filterRequestType}
+              onChange={(e) => setFilterRequestType(e.target.value)}
+              options={[
+                { value: "all", label: "All" },
+                { value: "standard", label: "Standard" },
+                { value: "express", label: "Express" },
+              ]}
+            />
+          </div>
+          <div className="w-full sm:w-[334px]">
+            <SelectMenuComp
+              label="Store"
+              value={filterStore}
+              onChange={(e) => setFilterStore(e.target.value)}
+              options={[
+                { value: "all", label: "All" },
+                { value: "store1", label: "Store 1" },
+                { value: "store2", label: "Store 2" },
+              ]}
+            />
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <DriverTableDataComp requests={driverRequests} />
+        </div>
+
+        <div className="mt-5 text-center">
+          <ButtonComp
+            sx={{ width: "114px", borderRadius: "6px" }}
+            // onClick={() => setIsNextClicked(true)}
+            onClick={handleNext}
+          >
+            Next
+          </ButtonComp>
+        </div>
+      </>
+      {/* ) : (
+        <ManageScheduleAssign onBack={() => setIsNextClicked(false)} /> */}
+      {/* )} */}
     </>
   );
 };

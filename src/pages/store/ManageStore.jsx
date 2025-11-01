@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import SelectMenuComp from "../../components/reusableComps/SelectMenuComp";
 import SearchBarComp from "../../components/reusableComps/SearchBarComp";
 import TableDataComp from "../../components/reusableComps/TableDataComp";
@@ -14,18 +15,42 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import downloadIcon from "../../assets/icons/download.svg";
 import ButtonComp from "../../components/reusableComps/ButtonComp";
+import { fetchStores } from "../../redux/storeSlice";
+import { fetchInvoices } from "../../redux/invoiceSlice";
 
 const ManageStore = () => {
   const navigate = useNavigate();
-  //use state for view mode
+  const dispatch = useDispatch();
+
+  // Redux state
+  const { stores, loading, error } = useSelector((state) => state.stores);
+
+  // Local state
   const [viewMode, setViewMode] = useState(false);
   const [open, setOpen] = useState(false);
   const [filterBuisnessType, setFilterBuisnessType] = useState("");
 
+  //view mode data useState
+  const [selectedStore, setSelectedStore] = useState(null);
+
+  //invoices data from redux
+  const { invoices } = useSelector((state) => state.invoices);
+
+  // Fetch stores on component mount
+  useEffect(() => {
+    dispatch(fetchStores({ page: 1, pageSize: 10 }));
+  }, [dispatch]);
+
+  //fetch invoices data on component mount
+  // useEffect(() => {
+  //   dispatch(fetchInvoices({ page: 1, pageSize: 10 }));
+  // }, [dispatch]);
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
-    setViewMode(false); // reset back
+    setViewMode(false);
+    setSelectedStore(null);
   };
 
   const handleInvoice = () => {
@@ -46,33 +71,14 @@ const ManageStore = () => {
     { key: "buisnessType", label: "Buisness Type" },
     { key: "address", label: "Address" },
   ];
-  const data = [
-    {
-      store: "Morrisons",
-      phoneNumber: "07712 345678",
-      buisnessType: "Sole Trader",
-      address: "Trafalgar Square",
-    },
-    {
-      store: "Waitrose",
-      phoneNumber: "07556 345678",
-      buisnessType: "Partnership",
-      address: "Piccadilly Circus",
-    },
-    {
-      store: "Sainsbury's",
-      phoneNumber: "07652 345678",
-      buisnessType: "Limited Company (Ltd)",
-      address: "Big Ben (Westminster)",
-    },
-  ];
+
   const actions = [
     {
       label: "View Invoice",
       render: (row) => (
         <NavLink
           to="/store/invoices"
-          state={{ row }}
+          state={{ storeId: row.id, storeName: row.store }}
           className="text-[rgba(233,138,21,1)] hover:text-black underline"
         >
           View Invoice
@@ -85,7 +91,7 @@ const ManageStore = () => {
       render: (row) => (
         <NavLink
           to="/store/wtns"
-          state={{ row }}
+          state={{ storeId: row.id, storeName: row.store }}
           className="text-[rgba(233,138,21,1)] hover:text-black underline"
         >
           View WTN
@@ -97,6 +103,7 @@ const ManageStore = () => {
       label: "View",
       // onClick: (row) => console.log("View", row),
       onClick: (row) => {
+        setSelectedStore(row);
         setViewMode(true); // enable view mode
         setOpen(true); // open modal
       },
@@ -210,23 +217,33 @@ const ManageStore = () => {
   ];
   return (
     <>
-      <div className="flex gap-6">
-        <SelectMenuComp
-          label="Buisness Type"
-          name="filterBuisnessType"
-          value={filterBuisnessType}
-          onChange={(e) => setFilterBuisnessType(e.target.value)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "soloTrader", label: "Solo Trader" },
-            { value: "partnership", label: "Partnership" },
-            { value: "limitedCompany", label: "Limited Company" },
-          ]}
-        />
-        <SearchBarComp />
+      <div className="flex flex-wrap gap-4 w-full">
+        <div className="w-full sm:w-[334px]">
+          <SelectMenuComp
+            label="Buisness Type"
+            name="filterBuisnessType"
+            value={filterBuisnessType}
+            onChange={(e) => setFilterBuisnessType(e.target.value)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "soloTrader", label: "Solo Trader" },
+              { value: "partnership", label: "Partnership" },
+              { value: "limitedCompany", label: "Limited Company" },
+            ]}
+          />
+        </div>
+        <div className="w-full sm:w-[334px]">
+          <SearchBarComp />
+        </div>
       </div>
       <div className="mt-5">
-        <TableDataComp columns={coloumns} data={data} actions={actions} />
+        {loading ? (
+          <div>Loading stores...</div>
+        ) : error ? (
+          <div>Error loading stores: {error}</div>
+        ) : (
+          <TableDataComp columns={coloumns} data={stores} actions={actions} />
+        )}
       </div>
       <Dialog
         open={open}
@@ -256,7 +273,7 @@ const ManageStore = () => {
             pb: 2,
           }}
         >
-          Store: Morrisons
+          Store: {selectedStore?.store || "N/A"}
           <IconButton onClick={handleClose} sx={{ color: "#012622" }}>
             <CloseIcon />
           </IconButton>
@@ -275,32 +292,42 @@ const ManageStore = () => {
             <>
               {/* Store Info */}
 
-              <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-6">
-                {[
-                  { label: "Store", value: "Morrisons" },
-                  { label: "Phone Number", value: "07712 345678" },
-                  { label: "Company Number", value: "CMP123456" },
-                  { label: "Business Type", value: "Store" },
-                  { label: "Vat Number", value: "GB123456789" },
-                  {
-                    label: "Address",
-                    value: "47 Baker Street, London, W1U 8ED",
-                  },
-                  {
-                    label: "Hours Of Operations",
-                    value: "Mon - Fri, 10:00 AM to 5:00 PM",
-                  },
-                ].map((item, i) => (
-                  <div key={i}>
-                    <p className="text-[14px] font-medium text-gray-600">
-                      {item.label}
-                    </p>
-                    <h6 className="text-[16px] font-semibold text-gray-900">
-                      {item.value}
-                    </h6>
-                  </div>
-                ))}
-              </div>
+              {selectedStore && (
+                <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-6">
+                  {[
+                    { label: "Store", value: selectedStore.store },
+                    { label: "Phone Number", value: selectedStore.phoneNumber },
+                    {
+                      label: "Business Type",
+                      value: selectedStore.buisnessType,
+                    },
+                    { label: "Vat Number", value: selectedStore.vat_no },
+                    { label: "CIN Number", value: selectedStore.cin_no },
+                    { label: "Address", value: selectedStore.address },
+                    {
+                      label: "Hours Of Operations",
+                      value:
+                        selectedStore.hours_of_operation?.length > 0
+                          ? selectedStore.hours_of_operation
+                              .map(
+                                (op) =>
+                                  `${op.days_of_week}: ${op.open_time} - ${op.close_time}`
+                              )
+                              .join(", ")
+                          : "No timing info available",
+                    },
+                  ].map((item, i) => (
+                    <div key={i}>
+                      <p className="text-[14px] font-medium text-gray-600">
+                        {item.label}
+                      </p>
+                      <h6 className="text-[16px] font-semibold text-gray-900">
+                        {item.value || "N/A"}
+                      </h6>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Transaction Details */}
               <div className="mb-6">

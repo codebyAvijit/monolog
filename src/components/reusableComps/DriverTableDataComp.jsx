@@ -226,7 +226,15 @@ const DriverTableDataComp = ({ requests = [], actions = [] }) => {
     },
   ];
 
-  return <TableDataComp columns={columns} data={drivers} actions={actions} />;
+  return (
+    <TableDataComp
+      columns={columns}
+      data={drivers}
+      actions={actions}
+      showRightBorder={true} //  right border only for this table
+      bottomBorderColor="border-gray-200" //  very light grey bottom border
+    />
+  );
 };
 
 export default DriverTableDataComp;

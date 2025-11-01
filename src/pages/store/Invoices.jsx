@@ -1,144 +1,60 @@
-import React from "react";
-import SelectMenuComp from "../../components/reusableComps/SelectMenuComp";
-import SearchBarComp from "../../components/reusableComps/SearchBarComp";
-import TableDataComp from "../../components/reusableComps/TableDataComp";
-import eyeOpen from "../../assets/icons/eyeOpen.svg";
-import downloadIcon from "../../assets/icons/download.svg";
-import { useState } from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import DatePickerComp from "../../components/reusableComps/DatePickerComp";
-import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import TableDataComp from "../../components/reusableComps/TableDataComp";
+import { fetchInvoices } from "../../redux/invoiceSlice";
 
 const Invoices = () => {
-  //   const location = useLocation();
-  //   const row = location.state?.row; // ✅ access the row passed
-  const [filterStore, setFilterStore] = useState("");
-  const [viewMode, setViewMode] = useState(false);
-  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const dispatch = useDispatch();
 
-  //useState to view a particular selected row
+  const storeId = location.state?.storeId; // Optional, passed from ManageStore
+  const storeName = location.state?.storeName;
 
-  const [selectedRow, setSelectedRow] = useState(null); // not in use as of now kept optional
+  const { invoices, loading, error } = useSelector((state) => state.invoices);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    setViewMode(false); // reset back
-  };
+  useEffect(() => {
+    dispatch(fetchInvoices({ page: 1, pageSize: 100, storeId })); // fetch filtered by storeId if present
+  }, [dispatch, storeId]);
+
   const columns = [
     { key: "invoiceNumber", label: "Invoice Number" },
-    { key: "store", label: "Store" },
+    { key: "storeName", label: "Store" },
     { key: "date", label: "Date" },
+    {
+      key: "fileUrl",
+      label: "Invoice",
+      render: (row) =>
+        row.fileUrl ? (
+          <a
+            href={row.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            View
+          </a>
+        ) : (
+          <span className="text-gray-400">No Invoice</span>
+        ),
+    },
   ];
 
-  const data = [
-    {
-      invoiceNumber: "INV001",
-      store: "Morrisons",
-      date: "28-8-2025",
-    },
-    {
-      invoiceNumber: "INV001",
-      store: "Morrisons",
-      date: "28-8-2025",
-    },
-    {
-      invoiceNumber: "INV001",
-      store: "Morrisons",
-      date: "28-8-2025",
-    },
-  ];
-
-  const actions = [
-    {
-      icon: eyeOpen,
-      label: "View",
-      // onClick: (row) => console.log("View", row),
-      onClick: (row) => {
-        setViewMode(true); // enable view mode
-        setOpen(true); // open modal
-        setSelectedRow(row);
-      },
-    },
-    {
-      icon: downloadIcon,
-      label: "download",
-      // onClick: (row) => console.log("View", row),
-      onClick: (row) => {
-        setViewMode(true); // enable view mode
-        setOpen(true); // open modal
-      },
-    },
-  ];
   return (
-    <>
-      <div className="flex gap-5">
-        <SelectMenuComp
-          label="Store"
-          value={filterStore}
-          onChange={(e) => setFilterStore(e.target.value)}
-          options={[
-            { value: "Morrisons", label: "Morrisons" },
-            { value: "Waitrose", label: "Waitrose" },
-            { value: "Sainsbury's", label: "Sainsbury's" },
-          ]}
-        />
-        <DatePickerComp label="Date" />
-        <SearchBarComp />
-      </div>
-      <div className="mt-5">
-        <TableDataComp columns={columns} data={data} actions={actions} />
-      </div>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        disableRestoreFocus
-        fullWidth
-        slotProps={{
-          paper: {
-            sx: {
-              maxWidth: "1177px",
-              borderRadius: "12px",
-              p: 3,
-              maxHeight: "723px",
-            },
-          },
-        }}
-      >
-        <DialogTitle
-          className="flex flex-row justify-between items-center font-[800] text-[20px] md:text-[24px] text-[#012622]"
-          sx={{ fontWeight: "600", fontSize: "20px", color: "#012622" }}
-        >
-          {selectedRow ? "Invoices" : ""}
-          <IconButton onClick={handleClose} sx={{ color: "#012622" }}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent>
-          {selectedRow && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-gray-600">Invoice Number</p>
-                <h6 className="text-lg font-semibold">
-                  {selectedRow.invoiceNumber}
-                </h6>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Store</p>
-                <h6 className="text-lg font-semibold">{selectedRow.store}</h6>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-600">Date</p>
-                <h6 className="text-lg font-semibold">{selectedRow.date}</h6>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+    <div>
+      <h2 className="text-xl font-bold mb-4">
+        {storeName ? `Invoices for ${storeName}` : "All Invoices"}
+      </h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <p className="text-red-500">Error: {error}</p>
+      ) : invoices.length > 0 ? (
+        <TableDataComp columns={columns} data={invoices} />
+      ) : (
+        <p>No invoices found.</p>
+      )}
+    </div>
   );
 };
 

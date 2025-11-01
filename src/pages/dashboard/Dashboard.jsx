@@ -6,8 +6,8 @@ const Dashboard = () => {
   return (
     <>
       <Nav />
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <h1 className="text-3xl font-bold">Welcome to Dashboard 🎉</h1>
+      <div className="flex items-center justify-center h-screen bg-gray-100 p-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center">Welcome to Dashboard</h1>
       </div>
     </>
   );

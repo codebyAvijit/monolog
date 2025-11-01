@@ -66,21 +66,23 @@ const SelectMenuComp = ({
   selectId = "select",
   error = false,
   helperText = "",
+  fullWidth = false,
   ...rest
 }) => (
   <div
     style={{
       position: "relative",
-      width: "334px",
-      maxWidth: "100%",
-      // marginBottom: "26px", // Space for helper text + padding
+      width: "100%",
     }}
+    className="w-full"
   >
     <FormControl
       variant="outlined"
       sx={{
         height: "60px",
         width: "100%",
+        maxWidth: { xs: "100%", sm: "334px", lg: "334px", xl: "334px" }, // Responsive: 100% on mobile, 334px on tablet+
+
         // Fixed helper text positioning
         "& .MuiFormHelperText-root": {
           position: "absolute",

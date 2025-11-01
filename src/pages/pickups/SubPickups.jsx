@@ -32,14 +32,12 @@ const SubPickups = () => {
   const [filterRequestType, setFilterRequestType] = useState("");
   const [filterStoreType, setFilterStoreType] = useState("");
 
-  //to show status as a span in view mode
-
   const [selectedRow, setSelectedRow] = useState(null);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
-    setViewMode(false); // reset back
+    setViewMode(false);
   };
 
   const columns = [
@@ -63,7 +61,7 @@ const SubPickups = () => {
       key: "status",
       label: "Status",
       render: (val, row) => {
-        const displayVal = val ?? "N/A"; // fallback if undefined
+        const displayVal = val ?? "N/A";
         let classes = "";
 
         if (displayVal === "Requested") {
@@ -76,7 +74,7 @@ const SubPickups = () => {
 
         return (
           <span
-            className={`inline-block px-2 py-1 text-center text-[16px] font-[700] w-[95px] h-[30px] rounded-[30px] ${classes}`}
+            className={`inline-block px-2 py-1 text-center text-xs md:text-sm font-[700] min-w-[80px] md:min-w-[95px] h-[28px] md:h-[30px] rounded-[30px] ${classes}`}
           >
             {displayVal}
           </span>
@@ -92,7 +90,7 @@ const SubPickups = () => {
               to={pdfURL}
               target="_blank"
               state={{ row }}
-              className="text-[rgba(233,138,21,1)] hover:text-black underline"
+              className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
             >
               View Invoice
             </NavLink>
@@ -104,14 +102,13 @@ const SubPickups = () => {
     {
       label: "View WTN",
       render: (el, row) => {
-        // console.log("Row status:", row?.status);
         if (row?.status === "Completed") {
           return (
             <NavLink
               to={wtnURL}
               target="_blank"
               state={{ row }}
-              className="text-[rgba(233,138,21,1)] hover:text-black underline"
+              className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
             >
               View WTN
             </NavLink>
@@ -125,7 +122,6 @@ const SubPickups = () => {
   const data = [
     {
       requestId: "REQ-1001",
-      //   store: "Emily",
       pickupLocation: "47 Baker Street, London, W1U 8ED",
       pickupDate: "05/09/2025",
       status: "Arrived",
@@ -134,7 +130,6 @@ const SubPickups = () => {
     },
     {
       requestId: "REQ-1002",
-      //   store: "Sarah",
       pickupLocation: "47 Baker Street, London, W1U 8ED",
       pickupDate: "05/09/2025",
       status: "En-route",
@@ -143,7 +138,6 @@ const SubPickups = () => {
     },
     {
       requestId: "REQ-1003",
-      //   store: "Raj",
       pickupLocation: "47 Baker Street, London, W1U 8ED",
       pickupDate: "05/09/2025",
       status: "Requested",
@@ -184,14 +178,15 @@ const SubPickups = () => {
 
   return (
     <>
-      <div className="flex gap-5 flex-wrap justify-between">
+      {/* Filters Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
         <div className="my-rsuite">
           <DateRangePicker
             placeholder=":"
             className="custom-date-range"
             format="dd/MM/yyyy"
             showOneCalendar
-            style={{ width: 334, height: 60 }}
+            style={{ width: "100%", height: 60 }}
             label="Select Date"
           />
         </div>
@@ -209,6 +204,7 @@ const SubPickups = () => {
             { value: "completed", label: "Completed" },
           ]}
         />
+
         <SelectMenuComp
           label="Request Type"
           name="filterRequestType"
@@ -221,6 +217,7 @@ const SubPickups = () => {
             { value: "express", label: "Express" },
           ]}
         />
+
         <SelectMenuComp
           label="Store"
           name="filterStoreType"
@@ -233,23 +230,32 @@ const SubPickups = () => {
             { value: "sarah", label: "Sarah" },
           ]}
         />
+
         <SearchBarComp />
       </div>
+
+      {/* Table */}
       <div className="mt-5">
         <TableDataComp columns={columns} data={data} actions={actions} />
       </div>
+
+      {/* View Dialog */}
       <Dialog
         open={open}
         onClose={handleClose}
         fullWidth
         disableRestoreFocus
-        PaperProps={{
-          sx: {
-            maxWidth: "1177px",
-            borderRadius: "12px",
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
+        maxWidth="lg"
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: "95%", sm: "90%", md: "85%" },
+              maxWidth: "1100px",
+              margin: { xs: "8px", sm: "16px" },
+              maxHeight: { xs: "90vh", sm: "85vh" },
+              borderRadius: "12px",
+              overflowY: "auto",
+            },
           },
         }}
       >
@@ -257,21 +263,25 @@ const SubPickups = () => {
         <DialogTitle
           sx={{
             fontWeight: "600",
-            fontSize: "20px",
+            fontSize: { xs: "16px", md: "18px", lg: "20px" },
             color: "#012622",
             display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: { xs: "flex-start", sm: "center" },
             borderBottom: "1px solid #E5E7EB",
             pb: 2,
+            gap: 2,
           }}
         >
-          {/* ✅ Wrap heading + status pill together */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span>Pick-up Details - {selectedRow?.requestId}</span>
+          {/* Heading + Status pill */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm md:text-base lg:text-lg">
+              Pick-up Details - {selectedRow?.requestId}
+            </span>
             {selectedRow && (
               <span
-                className={`inline-block px-2 py-1 text-center text-[16px] font-[700] w-[97px] h-[30px] rounded-[30px] ${
+                className={`inline-block px-2 py-1 text-center text-xs md:text-sm font-[700] min-w-[80px] md:min-w-[97px] h-[28px] md:h-[30px] rounded-[30px] ${
                   selectedRow.status === "Requested"
                     ? "bg-gray-200 text-black"
                     : selectedRow.status === "Completed"
@@ -284,8 +294,14 @@ const SubPickups = () => {
             )}
           </div>
 
-          {/* ❌ Close button stays on the right */}
-          <IconButton onClick={handleClose} sx={{ color: "#012622" }}>
+          {/* Close button */}
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              color: "#012622",
+              alignSelf: { xs: "flex-end", sm: "center" },
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -293,91 +309,93 @@ const SubPickups = () => {
         {/* Content */}
         <DialogContent
           sx={{
-            flex: 1,
-            overflowY: "auto",
-            p: 3,
+            p: { xs: 2, sm: 3 },
             mt: 2,
           }}
         >
           {viewMode && (
-            <>
-              {/* Store Info */}
-
-              <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-6">
-                {[
-                  { label: "Request ID", value: "1001" },
-                  {
-                    label: "Pick-up Location",
-                    value: "47 Baker Street, London, W1U 8ED",
-                  },
-                  { label: "Number of Tyres", value: "40" },
-                  { label: "Pick-up Date", value: "05/09/2025" },
-                  {
-                    label: "Request Type",
-                    value: "Express",
-                  },
-                  {
-                    label: "Driver Name",
-                    value: "John Smith",
-                  },
-                  {
-                    label: "Vehicle Number",
-                    value: "PZ65 ABC",
-                  },
-                  {
-                    label: "Invoice",
-                    value:
-                      selectedRow?.status === "Completed" ? (
-                        <NavLink
-                          to={pdfURL}
-                          target="_blank"
-                          state={{ row: selectedRow }}
-                          className="text-[rgba(233,138,21,1)] hover:text-black underline"
-                        >
-                          View Invoice
-                        </NavLink>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      ),
-                  },
-                  {
-                    label: "WTN",
-                    value:
-                      selectedRow?.status === "Completed" ? (
-                        <NavLink
-                          to={wtnURL}
-                          target="_blank"
-                          state={{ row: selectedRow }}
-                          className="text-[rgba(233,138,21,1)] hover:text-black underline"
-                        >
-                          View WTN
-                        </NavLink>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      ),
-                  },
-                ].map((item, i) => (
-                  <div key={i}>
-                    <p className="text-[14px] font-medium text-gray-600">
-                      {item.label}
-                    </p>
-                    <h6 className="text-[16px] font-semibold text-gray-900">
-                      {item.value}
-                    </h6>
-                  </div>
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              {[
+                { label: "Request ID", value: "1001" },
+                {
+                  label: "Pick-up Location",
+                  value: "47 Baker Street, London, W1U 8ED",
+                },
+                { label: "Number of Tyres", value: "40" },
+                { label: "Pick-up Date", value: "05/09/2025" },
+                {
+                  label: "Request Type",
+                  value: "Express",
+                },
+                {
+                  label: "Driver Name",
+                  value: "John Smith",
+                },
+                {
+                  label: "Vehicle Number",
+                  value: "PZ65 ABC",
+                },
+                {
+                  label: "Invoice",
+                  value:
+                    selectedRow?.status === "Completed" ? (
+                      <NavLink
+                        to={pdfURL}
+                        target="_blank"
+                        state={{ row: selectedRow }}
+                        className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
+                      >
+                        View Invoice
+                      </NavLink>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    ),
+                },
+                {
+                  label: "WTN",
+                  value:
+                    selectedRow?.status === "Completed" ? (
+                      <NavLink
+                        to={wtnURL}
+                        target="_blank"
+                        state={{ row: selectedRow }}
+                        className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
+                      >
+                        View WTN
+                      </NavLink>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    ),
+                },
+              ].map((item, i) => (
+                <div key={i}>
+                  <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">
+                    {item.label}
+                  </p>
+                  <h6 className="text-sm md:text-base font-semibold text-gray-900 break-words">
+                    {item.value}
+                  </h6>
+                </div>
+              ))}
+            </div>
           )}
         </DialogContent>
 
-        <DialogActions sx={{ justifyContent: "center", gap: 3, pb: 2 }}>
+        {/* Close Button */}
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            gap: { xs: 2, sm: 3 },
+            pb: { xs: 2, sm: 3 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
           <ButtonComp
             variant="outlined"
             sx={{
-              width: "120px",
-              height: "50px",
-              fontSize: "16px",
+              width: { xs: "100%", sm: "120px" },
+              height: { xs: "45px", sm: "50px" },
+              fontSize: { xs: "14px", sm: "16px" },
               borderRadius: "6px",
             }}
             onClick={handleClose}

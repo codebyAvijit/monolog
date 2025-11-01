@@ -31,58 +31,27 @@ const PickupsHistory = () => {
   const [filterDriverName, setFilterDriverName] = useState("");
   const [filterVehicleNumber, setFilterVehicleNumber] = useState("");
 
-  //to show status as a span in view mode
-
   const [selectedRow, setSelectedRow] = useState(null);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
-    setViewMode(false); // reset back
+    setViewMode(false);
   };
 
   const columns = [
-    {
-      key: "tripId",
-      label: "Trip ID",
-    },
-    {
-      key: "driverName",
-      label: "Driver Name",
-    },
-    {
-      key: "vehicleNumber",
-      label: "Vehicle Number",
-    },
-    {
-      key: "tripStartDateTime",
-      label: "Trip Start Date & Time",
-    },
-    {
-      key: "tripEndDateTime",
-      label: "Trip End Date & Time",
-    },
-    {
-      key: "totalPickupLocation",
-      label: "Total Pick-up Locations",
-    },
-    {
-      key: "totalTyresCollected",
-      label: "Total Tyres Collected",
-    },
-    {
-      key: "mileage",
-      label: "Mileage (kilometre)",
-    },
-    {
-      key: "weighmentSlip",
-      label: "Weighment Slip",
-    },
-    {
-      key: "tripDuration",
-      label: "Trip Duration",
-    },
+    { key: "tripId", label: "Trip ID" },
+    { key: "driverName", label: "Driver Name" },
+    { key: "vehicleNumber", label: "Vehicle Number" },
+    { key: "tripStartDateTime", label: "Trip Start Date & Time" },
+    { key: "tripEndDateTime", label: "Trip End Date & Time" },
+    { key: "totalPickupLocation", label: "Total Pick-up Locations" },
+    { key: "totalTyresCollected", label: "Total Tyres Collected" },
+    { key: "mileage", label: "Mileage (kilometre)" },
+    { key: "weighmentSlip", label: "Weighment Slip" },
+    { key: "tripDuration", label: "Trip Duration" },
   ];
+
   const data = [
     {
       tripId: "ROUTE-2001",
@@ -97,8 +66,7 @@ const PickupsHistory = () => {
         <NavLink
           to={pdfURL}
           target="_blank"
-          state={{ row: selectedRow }}
-          className="text-[rgba(233,138,21,1)] hover:text-black underline"
+          className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
         >
           slip_weight.pdf
         </NavLink>
@@ -118,8 +86,7 @@ const PickupsHistory = () => {
         <NavLink
           to={pdfURL}
           target="_blank"
-          state={{ row: selectedRow }}
-          className="text-[rgba(233,138,21,1)] hover:text-black underline"
+          className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
         >
           slip_weight.pdf
         </NavLink>
@@ -139,8 +106,7 @@ const PickupsHistory = () => {
         <NavLink
           to={pdfURL}
           target="_blank"
-          state={{ row: selectedRow }}
-          className="text-[rgba(233,138,21,1)] hover:text-black underline"
+          className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
         >
           slip_weight.pdf
         </NavLink>
@@ -148,6 +114,7 @@ const PickupsHistory = () => {
       tripDuration: "4:15 Hours",
     },
   ];
+
   const actions = [
     {
       icon: eyeOpen,
@@ -161,35 +128,15 @@ const PickupsHistory = () => {
   ];
 
   const columnForModalPickupDetail = [
-    {
-      key: "storeName",
-      label: "Store Name",
-    },
-    {
-      key: "pickupAddress",
-      label: "Pick-up Address",
-    },
-    {
-      key: "pickupDateTime",
-      label: "Pick-up Date & Time",
-    },
-    {
-      key: "tyresCollected",
-      label: "Tyres Collected",
-    },
-    {
-      key: "requestType",
-      label: "Request Type",
-    },
-    {
-      key: "invoice",
-      label: "",
-    },
-    {
-      key: "wtn",
-      label: "",
-    },
+    { key: "storeName", label: "Store Name" },
+    { key: "pickupAddress", label: "Pick-up Address" },
+    { key: "pickupDateTime", label: "Pick-up Date & Time" },
+    { key: "tyresCollected", label: "Tyres Collected" },
+    { key: "requestType", label: "Request Type" },
+    { key: "invoice", label: "" },
+    { key: "wtn", label: "" },
   ];
+
   const dataForModalPickupDetail = [
     {
       storeName: "Store 1",
@@ -201,8 +148,7 @@ const PickupsHistory = () => {
         <NavLink
           to={pdfURL}
           target="_blank"
-          state={{ row: selectedRow }}
-          className="text-[rgba(233,138,21,1)] hover:text-black underline"
+          className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
         >
           View Invoice
         </NavLink>
@@ -211,8 +157,7 @@ const PickupsHistory = () => {
         <NavLink
           to={wtnURL}
           target="_blank"
-          state={{ row: selectedRow }}
-          className="text-[rgba(233,138,21,1)] hover:text-black underline"
+          className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
         >
           View WTN
         </NavLink>
@@ -220,31 +165,21 @@ const PickupsHistory = () => {
     },
   ];
 
-  //   const actionForModalPickupDetail = [
-  //     {
-  //       icon: "hi",
-  //       label: "View",
-  //       onClick: (row) => {
-  //         setViewMode(true);
-  //         setOpen(true);
-  //         setSelectedRow(row);
-  //       },
-  //     },
-  //   ];
-
   return (
     <>
-      <div className="flex flex-wrap justify-between gap-5">
+      {/* Filters Section - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
         <div className="my-rsuite">
           <DateRangePicker
             placeholder=":"
             className="custom-date-range"
             format="dd/MM/yyyy"
             showOneCalendar
-            style={{ width: 334, height: 60 }}
+            style={{ width: "100%", height: 60 }}
             label="Select Date"
           />
         </div>
+
         <SelectMenuComp
           label="Route ID"
           name="filterRouteId"
@@ -258,6 +193,7 @@ const PickupsHistory = () => {
             { value: "Route_2004", label: "Route_2004" },
           ]}
         />
+
         <SelectMenuComp
           label="Driver Name"
           name="filterDriverName"
@@ -271,6 +207,7 @@ const PickupsHistory = () => {
             { value: "Cahan", label: "Cahan" },
           ]}
         />
+
         <SelectMenuComp
           label="Vehicle Number"
           name="filterVehicleNumber"
@@ -284,23 +221,32 @@ const PickupsHistory = () => {
             { value: "LX20 BCD", label: "LX20 BCD" },
           ]}
         />
+
         <SearchBarComp />
       </div>
+
+      {/* Table */}
       <div className="mt-5">
         <TableDataComp columns={columns} data={data} actions={actions} />
       </div>
+
+      {/* View Dialog */}
       <Dialog
         open={open}
         onClose={handleClose}
         fullWidth
         disableRestoreFocus
-        PaperProps={{
-          sx: {
-            maxWidth: "1177px",
-            borderRadius: "12px",
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
+        maxWidth="xl"
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: "95%", sm: "90%", md: "85%" },
+              maxWidth: "1177px",
+              margin: { xs: "8px", sm: "16px" },
+              maxHeight: { xs: "90vh", sm: "85vh" },
+              borderRadius: "12px",
+              overflowY: "auto",
+            },
           },
         }}
       >
@@ -308,44 +254,37 @@ const PickupsHistory = () => {
         <DialogTitle
           sx={{
             fontWeight: "600",
-            fontSize: "20px",
+            fontSize: { xs: "16px", md: "18px", lg: "20px" },
             color: "#012622",
             display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: { xs: "flex-start", sm: "center" },
             borderBottom: "1px solid #E5E7EB",
             pb: 2,
+            gap: 2,
           }}
         >
-          {/* ✅ Wrap heading + status pill together */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span>Pick-up Details - {selectedRow?.requestId}</span>
+          {/* Heading + Status Badge */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm md:text-base lg:text-lg">
+              Trip Details - {selectedRow?.tripId}
+            </span>
             {selectedRow && (
-              <span className="inline-block px-2 py-1 text-center text-[16px] font-[700] w-[97px] h-[30px] rounded-[30px] bg-green-100 text-green-700">
+              <span className="inline-block px-3 py-1 text-center text-xs md:text-sm font-bold rounded-[30px] bg-green-100 text-green-700">
                 Completed
               </span>
             )}
           </div>
 
-          {/* <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span>Pick-up Details - {selectedRow?.tripId}</span>
-            {selectedRow && (
-              <span
-                className={`inline-block px-2 py-1 text-center text-[16px] font-[700] w-[97px] h-[30px] rounded-[30px] ${
-                  selectedRow.status === "Requested"
-                    ? "bg-gray-200 text-black"
-                    : selectedRow.status === "Completed"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-sky-100 text-sky-700"
-                }`}
-              >
-                {selectedRow.status}
-              </span>
-            )}
-          </div> */}
-
-          {/* ❌ Close button stays on the right */}
-          <IconButton onClick={handleClose} sx={{ color: "#012622" }}>
+          {/* Close button */}
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              color: "#012622",
+              alignSelf: { xs: "flex-end", sm: "center" },
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -353,17 +292,14 @@ const PickupsHistory = () => {
         {/* Content */}
         <DialogContent
           sx={{
-            flex: 1,
-            overflowY: "auto",
-            p: 3,
+            p: { xs: 2, sm: 3 },
             mt: 2,
           }}
         >
           {viewMode && (
             <>
-              {/* Store Info */}
-
-              <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-6">
+              {/* Trip Information Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-6">
                 {[
                   { label: "Trip ID", value: selectedRow?.tripId },
                   { label: "Driver Name", value: selectedRow?.driverName },
@@ -383,7 +319,10 @@ const PickupsHistory = () => {
                     label: "Total Tyres Collected",
                     value: selectedRow?.totalTyresCollected,
                   },
-                  { label: "Mileage (kilometre)", value: selectedRow?.mileage },
+                  {
+                    label: "Mileage (kilometre)",
+                    value: selectedRow?.mileage,
+                  },
                   {
                     label: "Total Duration (hours)",
                     value: selectedRow?.tripDuration,
@@ -394,7 +333,7 @@ const PickupsHistory = () => {
                       <NavLink
                         to={pdfURL}
                         target="_blank"
-                        className="text-[rgba(233,138,21,1)] hover:text-black underline"
+                        className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
                       >
                         Weighment Slip
                       </NavLink>
@@ -404,64 +343,74 @@ const PickupsHistory = () => {
                   },
                 ].map((item, i) => (
                   <div key={i}>
-                    <p className="text-[14px] font-medium text-gray-600">
+                    <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">
                       {item.label}
                     </p>
-                    <h6 className="text-[16px] font-semibold text-gray-900">
+                    <h6 className="text-sm md:text-base font-semibold text-gray-900 break-words">
                       {item.value}
                     </h6>
                   </div>
                 ))}
               </div>
 
+              {/* Pick-up Details Section */}
               <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">
+                <h2 className="text-base md:text-lg font-semibold mb-3 text-[#012622]">
                   Pick-up Details (Per Store)
                 </h2>
                 <TableDataComp
                   columns={columnForModalPickupDetail}
                   data={dataForModalPickupDetail}
-                  //   actions={actionForModalPickupDetail}
                 />
               </div>
-              <h2 className="text-lg font-semibold mb-2">
-                Delivery Details (Recycle Plant)
-              </h2>
-              <div className="mb-6 flex justify-between">
-                {[
-                  { label: "Recycle Plant Name", value: "Recycle Hub" },
-                  {
-                    label: "Arrival Time at Plant",
-                    value: "03/07/2025, 04:00 PM",
-                  },
-                  {
-                    label: "Total Tyres Delivered",
-                    value: "470",
-                  },
-                ].map((item, i) => {
-                  return (
+
+              {/* Delivery Details Section */}
+              <div className="mb-4">
+                <h2 className="text-base md:text-lg font-semibold mb-3 text-[#012622]">
+                  Delivery Details (Recycle Plant)
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {[
+                    { label: "Recycle Plant Name", value: "Recycle Hub" },
+                    {
+                      label: "Arrival Time at Plant",
+                      value: "03/07/2025, 04:00 PM",
+                    },
+                    {
+                      label: "Total Tyres Delivered",
+                      value: "470",
+                    },
+                  ].map((item, i) => (
                     <div key={i}>
-                      <p className="text-[14px] font-medium text-gray-600">
+                      <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">
                         {item.label}
                       </p>
-                      <h6 className="text-[16px] font-semibold text-gray-900">
+                      <h6 className="text-sm md:text-base font-semibold text-gray-900">
                         {item.value}
                       </h6>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             </>
           )}
         </DialogContent>
 
-        <DialogActions sx={{ justifyContent: "center", gap: 3, pb: 2 }}>
+        {/* Close Button */}
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            gap: { xs: 2, sm: 3 },
+            pb: { xs: 2, sm: 3 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
           <ButtonComp
             variant="outlined"
             sx={{
-              width: "120px",
-              height: "50px",
-              fontSize: "16px",
+              width: { xs: "100%", sm: "120px" },
+              height: { xs: "45px", sm: "50px" },
+              fontSize: { xs: "14px", sm: "16px" },
               borderRadius: "6px",
             }}
             onClick={handleClose}

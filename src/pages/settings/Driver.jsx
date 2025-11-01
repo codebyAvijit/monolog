@@ -1,14 +1,13 @@
 // Import necessary libraries and components
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { validateFields } from "../../utils/validation";
 import { driverValidationConfig } from "../../utils/driverValidationConfig";
 import {
-  addDriver,
+  createDriver,
   deleteDriver,
   updateDriver,
-  setDrivers,
+  fetchDriversData,
 } from "../../redux/driverSlice";
 import {
   Dialog,
@@ -16,8 +15,8 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  Snackbar,
 } from "@mui/material";
-
 import deleteIcon from "../../assets/icons/delete.svg";
 import editIcon from "../../assets/icons/edit.svg";
 import eyeOpen from "../../assets/icons/eyeOpen.svg";
@@ -30,120 +29,38 @@ import TableDataComp from "../../components/reusableComps/TableDataComp";
 import FormFieldComp from "../../components/reusableComps/FormFieldComp";
 import DatePickerComp from "../../components/reusableComps/DatePickerComp";
 
-// const validateAllFields = (values) => {
-//   const regexNum = /^\d+$/; // digits only
-//   const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-//   let errors = {};
-
-//   // Driver Name
-//   if (!values.driverName?.trim()) {
-//     errors.driverName = "Driver Name is required";
-//   }
-
-//   // Phone Number
-//   if (!values.phoneNumber) {
-//     errors.phoneNumber = "Phone Number is required";
-//   } else if (!regexNum.test(values.phoneNumber)) {
-//     errors.phoneNumber = "Phone Number should be a valid number";
-//   }
-
-//   //Email
-//   if (!values.email) {
-//     errors.email = "Email is required";
-//   } else if (!regexEmail.test(values.email)) {
-//     errors.email = "Invalid email address";
-//   }
-
-//   // License Number
-//   if (!values.licenseNumber?.trim()) {
-//     errors.licenseNumber = "License Number is required";
-//   }
-
-//   // Address
-//   if (!values.address?.trim()) {
-//     errors.address = "Address is required";
-//   }
-
-//   //vehicle Number
-
-//   if (!values.vehicleNumber?.trim()) {
-//     errors.vehicleNumber = "License Number is required";
-//   }
-
-//   // min tyre requirement
-//   if (!values.minTyresRequirement) {
-//     errors.minTyresRequirement = "Minimum Tyres are required";
-//   } else if (!regexNum.test(values.minTyresRequirement)) {
-//     errors.minTyresRequirement = "Minimum Tyres should be a valid number";
-//   }
-
-//   // max capacity
-//   if (!values.maxTyresCapacity) {
-//     errors.maxTyresCapacity = "Maximum Typre Capacity is required";
-//   } else if (!regexNum.test(values.maxTyresCapacity)) {
-//     errors.maxTyresCapacity = "Maximum Typre Capacity should be a valid number";
-//   }
-
-//   // license expiry Date
-//   if (!values.licenseExpiryDate) {
-//     errors.licenseExpiryDate = "License Expiry Date is required";
-//   }
-
-//   //postcodes
-
-//   if (!values.postCodesCovered?.trim()) {
-//     errors.postCodesCovered = "Postcode is required";
-//   }
-
-//   //postcodes
-
-//   if (!values.vehicleType?.trim()) {
-//     errors.vehicleType = "Vehicle Type is required";
-//   }
-
-//   // max weight
-
-//   if (!values.maxWeight) {
-//     errors.maxWeight = "Maximum Wieght is required";
-//   } else if (!regexNum.test(values.maxWeight)) {
-//     errors.maxWeight = "Maximum Wieght should be a valid number";
-//   }
-
-//   return errors;
-// };
-
 const validateAllFields = (values) => {
   return validateFields(values, driverValidationConfig);
 };
 
 const Driver = () => {
   //REPLACING MAIN PLAN ARRAY WITH REDUX INSTEAD OF LOCAL USESTATE
-
   const dispatch = useDispatch();
-  const mainDriverArray = useSelector((state) => state.driver.drivers);
-
+  const { drivers, loading, error } = useSelector((state) => state.driver);
   const [open, setOpen] = useState(false);
   const [filterPostcode, setFilterPostcode] = useState("");
   const [filterVehicleType, setFilterVehicleType] = useState("");
   const [errors, setErrors] = useState({});
-
   //SETING UP STATE FOR IMPLEMENTING EDITING FUNCTIONALITY USING REDUX
-
   const [editingId, setEditingId] = useState("");
-
   //useState to view a particular selected row
-
-  // const [selectedRow, setSelectedRow] = useState(null);  // not in use as of now kept optional
-
+  // const [selectedRow, setSelectedRow] = useState(null); // not in use as of now kept optional
   //use state for view mode
-
   const [viewMode, setViewMode] = useState(false);
 
-  //single form state for adding driver
+  //  Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    type: "",
+  });
 
+  useEffect(() => {
+    dispatch(fetchDriversData());
+  }, [dispatch]);
+
+  //single form state for adding driver
   const [form, setForm] = useState({
-    id: crypto.randomUUID(),
     driverName: "",
     phoneNumber: "",
     email: "",
@@ -162,7 +79,6 @@ const Driver = () => {
   });
 
   const resetForm = () => ({
-    id: crypto.randomUUID(),
     driverName: "",
     phoneNumber: "",
     email: "",
@@ -181,6 +97,7 @@ const Driver = () => {
   });
 
   const handleOpen = () => setOpen(true);
+
   const handleClose = () => {
     setOpen(false);
     setErrors({});
@@ -189,13 +106,14 @@ const Driver = () => {
     setViewMode(false); // reset back
   };
 
-  //changes cleared as soon as user starts typing
+  const handleSnackbarClose = () =>
+    setSnackbar({ open: false, message: "", type: "" });
 
+  //changes cleared as soon as user starts typing
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" })); // clear error on input
-
     // Run validation for this field only
     const fieldError =
       validateAllFields({ ...form, [name]: value })[name] || "";
@@ -207,41 +125,70 @@ const Driver = () => {
   // 2. If there are errors, show them and stop
   // 3. If no errors, save data
   // 4. Close modal and reset form
-
-  const handleSave = () => {
-    // const validationErrors = validateAllFields(form); // run validation
-    // if (Object.keys(validationErrors).length > 0) {
-    //   setErrors(validationErrors); // show errors
-    //   return; // stop saving
-    // }
-
+  //  Save Handler with Snackbar + Real-time Refresh
+  const handleSave = async () => {
     const validationErrors = validateFields(form, driverValidationConfig);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    if (editingId) {
-      dispatch(updateDriver({ id: editingId, ...form }));
-    } else {
-      dispatch(addDriver(form));
-    }
+    try {
+      if (editingId) {
+        await dispatch(updateDriver({ id: editingId, ...form })).unwrap();
+        setSnackbar({
+          open: true,
+          message: "Driver updated successfully",
+          type: "success",
+        });
+      } else {
+        await dispatch(createDriver(form)).unwrap(); // pass form, thunk will transform it
+        setSnackbar({
+          open: true,
+          message: "Driver created successfully",
+          type: "success",
+        });
+      }
 
-    handleClose(); // reset form & close modal
+      //  Fetch latest drivers after save
+      await dispatch(fetchDriversData()).unwrap();
+
+      handleClose();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: `Error: ${err.message || "Operation failed"}`,
+        type: "error",
+      });
+    }
   };
 
   //EDITING
-
   const handleEdit = (row) => {
     setForm(row);
     setEditingId(row.id);
     setOpen(true);
   };
 
-  //REPLACINF DELETE LOGIC WITH REDUX
-
-  const handleDelete = (id) => {
-    dispatch(deleteDriver(id));
+  //  Delete Handler with Snackbar + Real-time Refresh
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to proceed?")) {
+      try {
+        await dispatch(deleteDriver(id)).unwrap();
+        setSnackbar({
+          open: true,
+          message: "Driver deleted successfully",
+          type: "success",
+        });
+        await dispatch(fetchDriversData()).unwrap();
+      } catch (err) {
+        setSnackbar({
+          open: true,
+          message: `Error: ${err.message || "Deletion failed"}`,
+          type: "error",
+        });
+      }
+    }
   };
 
   const columns = [
@@ -257,47 +204,6 @@ const Driver = () => {
     { key: "tyresCurrentWeek", label: "Tyres Current Week" },
     { key: "tyresCurrentMonth", label: "Tyres Current Month" },
   ];
-
-  //DUMMY DATA
-
-  // const data = [
-  //   {
-  //     driverName: "John Doe",
-  //     phoneNumber: "+44 7712 345678",
-  //     email: "johndoe@company.com",
-  //     licenseNumber: "LIC123456",
-  //     vehicleType: "Truck",
-  //     vehicleNumber: "PZ65 ABC",
-  //     postCodesCovered: "110001",
-  //     tyresToday: "90",
-  //     tyresCurrentWeek: "490",
-  //     tyresCurrentMonth: "2700",
-  //   },
-  //   {
-  //     driverName: "John Doe",
-  //     phoneNumber: "+44 7712 345678",
-  //     email: "johndoe@company.com",
-  //     licenseNumber: "LIC123456",
-  //     vehicleType: "Truck",
-  //     vehicleNumber: "PZ65 ABC",
-  //     postCodesCovered: "100111",
-  //     tyresToday: "90",
-  //     tyresCurrentWeek: "490",
-  //     tyresCurrentMonth: "2700",
-  //   },
-  //   {
-  //     driverName: "John Doe",
-  //     phoneNumber: "+44 7712 345678",
-  //     email: "johndoe@company.com",
-  //     licenseNumber: "LIC123456",
-  //     vehicleType: "Truck",
-  //     vehicleNumber: "PZ65 ABC",
-  //     postCodesCovered: "200222",
-  //     tyresToday: "90",
-  //     tyresCurrentWeek: "490",
-  //     tyresCurrentMonth: "2700",
-  //   },
-  // ];
 
   const actions = [
     {
@@ -321,67 +227,65 @@ const Driver = () => {
       label: "Delete",
       color: "text-red-600 hover:text-red-800",
       // onClick: (row) => console.log("Delete", row),
-      // onClick: (row) => handleDelete(row.id),
-      onClick: (row) => {
-        let confirmation = confirm("Are you sure you want to proceed?");
-        if (confirmation) {
-          alert("You chose to proceed.");
-          handleDelete(row.id);
-        } else {
-          alert("You cancelled the action.");
-        }
-      },
+      onClick: (row) => handleDelete(row.id),
     },
   ];
 
+  const filteredDrivers = drivers.filter((d) =>
+    filterVehicleType ? d.vehicleType === filterVehicleType : true
+  );
+
   return (
     <>
+      {loading && <div className="text-center p-4">Loading...</div>}
+      {error && (
+        <div className="text-center p-4 text-red-600">Error: {error}</div>
+      )}
+
       {/* Toolbar */}
-      <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
-        <SelectMenuComp
-          label="PostCodes"
-          name="filterPostcode"
-          value={filterPostcode}
-          onChange={(e) => setFilterPostcode(e.target.value)}
-          options={[
-            { value: "110001", label: "110001" },
-            { value: "100111", label: "100111" },
-            { value: "200222", label: "200222" },
-          ]}
-        />
+      <div className="flex flex-wrap gap-5 justify-between items-end w-full">
+        {/* Left group: Vehicle Type + Search Bar */}
+        <div className="flex flex-wrap gap-4">
+          <div className="w-full sm:w-[334px]">
+            <SelectMenuComp
+              label="Vehicle Type"
+              name="filterVehicleType"
+              value={filterVehicleType}
+              onChange={(e) => setFilterVehicleType(e.target.value)}
+              options={[
+                { value: "", label: "All" },
+                { value: "Truck", label: "Truck" },
+                { value: "Van", label: "Van" },
+                { value: "Lorry", label: "Lorry" },
+              ]}
+            />
+          </div>
+          <div className="w-full sm:w-[334px]">
+            <SearchBarComp />
+          </div>
+        </div>
 
-        <SelectMenuComp
-          label="Vehicle Type"
-          name="filterVehicleType"
-          value={filterVehicleType}
-          onChange={(e) => setFilterVehicleType(e.target.value)}
-          options={[
-            { value: "Truck", label: "Truck" },
-            { value: "Van", label: "Van" },
-            { value: "Bike", label: "Bike" },
-          ]}
-        />
-        <SearchBarComp />
-
-        <ButtonComp
-          variant="contained"
-          sx={{
-            fontSize: "16px",
-            borderRadius: "6px",
-            width: { xs: "334px", md: "154px" },
-          }}
-          onClick={handleOpen}
-          className="w-full sm:w-auto pt-5 md:pt-0 ml-0"
-        >
-          Add New Driver
-        </ButtonComp>
+        {/* Right side: Button */}
+        <div className="w-full sm:w-auto">
+          <ButtonComp
+            variant="contained"
+            sx={{
+              fontSize: "16px",
+              borderRadius: "6px",
+              width: { xs: "100%", sm: "154px" },
+            }}
+            onClick={handleOpen}
+          >
+            Add New Driver
+          </ButtonComp>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto shadow rounded-lg">
+      <div className="overflow-x-auto shadow rounded-lg mt-5">
         <TableDataComp
           columns={columns}
-          data={mainDriverArray}
+          data={filteredDrivers}
           actions={actions}
         />
       </div>
@@ -396,70 +300,81 @@ const Driver = () => {
           paper: {
             sx: {
               maxWidth: "1177px",
+              width: { xs: "95%", sm: "90%", md: "85%", lg: "1177px" },
+              margin: { xs: "8px", sm: "16px" },
+              maxHeight: { xs: "90vh", sm: "85vh" },
               borderRadius: "12px",
-              p: 3,
-              // maxHeight: "723px",
-              // backgroundColor: "red",
+              p: { xs: 2, sm: 3 },
               overflowY: "auto",
             },
           },
         }}
       >
         <DialogTitle
-          className="flex flex-row justify-between items-center font-[800] text-[20px] md:text-[24px] text-[#012622]"
-          sx={{ fontWeight: "600", fontSize: "20px", color: "#012622" }}
+          className="flex flex-row justify-between items-center"
+          sx={{
+            fontWeight: "600",
+            fontSize: { xs: "18px", md: "20px", lg: "24px" },
+            color: "#012622",
+            p: { xs: "16px", sm: "20px" },
+          }}
         >
           {viewMode
             ? "View Driver"
             : editingId
             ? "Edit Driver"
             : "Add New Driver"}
-          <IconButton onClick={handleClose} sx={{ color: "#012622" }}>
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              color: "#012622",
+              ml: 2,
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           {/* Grid layout for form */}
-          <div className="flex flex-wrap pt-2 gap-x-7 gap-y-7 justify-center lg:justify-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7 gap-y-7 pt-2">
             <FormFieldComp
               placeholder="Driver Name"
               label="Driver Name"
               name="driverName"
-              // fullWidth
               value={form.driverName}
               onChange={handleChange}
               disabled={viewMode}
               error={!!errors.driverName}
               helperText={errors.driverName || ""}
             />
+
             <FormFieldComp
               placeholder="Phone Number"
               label="Phone Number"
               name="phoneNumber"
-              // fullWidth
               value={form.phoneNumber}
               onChange={handleChange}
               disabled={viewMode}
               error={!!errors.phoneNumber}
               helperText={errors.phoneNumber || ""}
             />
+
             <FormFieldComp
               placeholder="Email"
               name="email"
               label="Email"
-              // fullWidth
               value={form.email}
               onChange={handleChange}
               disabled={viewMode}
               error={!!errors.email}
               helperText={errors.email || ""}
             />
+
             <FormFieldComp
               placeholder="License Number"
               label="License Number"
               name="licenseNumber"
-              // fullWidth
               value={form.licenseNumber}
               onChange={handleChange}
               disabled={viewMode}
@@ -481,35 +396,21 @@ const Driver = () => {
                 }))
               }
               placeholder="Select Expiry Date"
-              width="334px"
+              width="100%"
               disabled={viewMode}
               error={!!errors.licenseExpiryDate}
               helperText={errors.licenseExpiryDate || ""}
             />
 
-            <SelectMenuComp
-              placeholder="Postcodes Covered"
-              name="postCodesCovered"
-              label="Postcodes Covered"
-              value={form.postCodesCovered}
-              onChange={handleChange}
-              options={[
-                { value: "110001", label: "110001" },
-                { value: "100111", label: "100111" },
-                { value: "200222", label: "200222" },
-              ]}
-              disabled={viewMode}
-              error={!!errors.postCodesCovered}
-              helperText={errors.postCodesCovered || ""}
-            />
+            {/* Empty div for spacing on desktop - keeps 2-column layout */}
+            <div className="hidden lg:block"></div>
 
-            <div className="w-[334px] xl:w-full lg:max-w-[1060px]">
+            {/* Full-width Address field */}
+            <div className="sm:col-span-2 lg:col-span-3">
               <FormFieldComp
                 placeholder="Address"
                 label="Address"
                 name="address"
-                // fullWidth
-                // width="1077px"
                 width="100%"
                 value={form.address}
                 onChange={handleChange}
@@ -525,7 +426,11 @@ const Driver = () => {
               name="vehicleType"
               value={form.vehicleType}
               onChange={handleChange}
-              options={[{ value: "Truck", label: "Truck" }]}
+              options={[
+                { value: "Truck", label: "Truck" },
+                { value: "Van", label: "Van" },
+                { value: "Lorry", label: "Lorry" },
+              ]}
               disabled={viewMode}
               error={!!errors.vehicleType}
               helperText={errors.vehicleType || ""}
@@ -535,40 +440,39 @@ const Driver = () => {
               placeholder="Vehicle Number"
               name="vehicleNumber"
               label="Vehicle Number"
-              // fullWidth
               value={form.vehicleNumber}
               onChange={handleChange}
               disabled={viewMode}
               error={!!errors.vehicleNumber}
               helperText={errors.vehicleNumber || ""}
             />
+
             <FormFieldComp
               placeholder="Minimum Tyres Requirement"
               label="Minimum Tyres Requirement"
               name="minTyresRequirement"
-              // fullWidth
               value={form.minTyresRequirement}
               onChange={handleChange}
               disabled={viewMode}
               error={!!errors.minTyresRequirement}
               helperText={errors.minTyresRequirement || ""}
             />
+
             <FormFieldComp
               placeholder="Maximum Tyres Capacity"
               label="Maximum Tyres Capacity"
               name="maxTyresCapacity"
-              // fullWidth
               value={form.maxTyresCapacity}
               onChange={handleChange}
               disabled={viewMode}
               error={!!errors.maxTyresCapacity}
               helperText={errors.maxTyresCapacity || ""}
             />
+
             <FormFieldComp
               placeholder="Maximum Weight (Kg)"
               label="Maximum Weight (Kg)"
               name="maxWeight"
-              // fullWidth
               value={form.maxWeight}
               onChange={handleChange}
               disabled={viewMode}
@@ -577,14 +481,22 @@ const Driver = () => {
             />
           </div>
         </DialogContent>
+
         {!viewMode && (
-          <DialogActions sx={{ justifyContent: "center", gap: 3, pb: 2 }}>
+          <DialogActions
+            sx={{
+              justifyContent: "center",
+              gap: { xs: 2, sm: 3 },
+              pb: { xs: 2, sm: 3 },
+              px: { xs: 2, sm: 3 },
+            }}
+          >
             <ButtonComp
               variant="contained"
               sx={{
-                width: "120px",
-                height: "50px",
-                fontSize: "16px",
+                width: { xs: "100px", sm: "120px" },
+                height: { xs: "45px", sm: "50px" },
+                fontSize: { xs: "14px", sm: "16px" },
                 borderRadius: "6px",
               }}
               onClick={handleSave}
@@ -594,9 +506,9 @@ const Driver = () => {
             <ButtonComp
               variant="outlined"
               sx={{
-                width: "120px",
-                height: "50px",
-                fontSize: "16px",
+                width: { xs: "100px", sm: "120px" },
+                height: { xs: "45px", sm: "50px" },
+                fontSize: { xs: "14px", sm: "16px" },
                 borderRadius: "6px",
               }}
               onClick={handleClose}
@@ -606,6 +518,23 @@ const Driver = () => {
           </DialogActions>
         )}
       </Dialog>
+
+      {/*  Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        message={snackbar.message}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        ContentProps={{
+          sx: {
+            backgroundColor:
+              snackbar.type === "success" ? "#2E7D32" : "#D32F2F",
+            color: "#fff",
+            fontWeight: 600,
+          },
+        }}
+      />
     </>
   );
 };

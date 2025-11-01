@@ -1,58 +1,62 @@
-import React from "react";
-import SelectMenuComp from "../../components/reusableComps/SelectMenuComp";
-import SearchBarComp from "../../components/reusableComps/SearchBarComp";
-import TableDataComp from "../../components/reusableComps/TableDataComp";
-import eyeOpen from "../../assets/icons/eyeOpen.svg";
-import downloadIcon from "../../assets/icons/download.svg";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import eyeOpen from "../../assets/icons/eyeOpen.svg";
+import downloadIcon from "../../assets/icons/download.svg";
+import TableDataComp from "../../components/reusableComps/TableDataComp";
+import { fetchWtns } from "../../redux/wtnsSlice";
 
 const Wtns = () => {
-  const [filterStore, setFilterStore] = useState("");
-  const [viewMode, setViewMode] = useState(false);
+  const location = useLocation();
+  const dispatch = useDispatch();
 
-  //useState to view a particular selected row
+  // StoreId and storeName are optional — only passed when viewing from a store
+  const storeId = location.state?.storeId || null;
+  const storeName = location.state?.storeName || null;
 
-  const [selectedRow, setSelectedRow] = useState(null); // not in use as of now kept optional
+  const { wtns, loading, error } = useSelector((state) => state.wtns);
 
+  const [selectedRow, setSelectedRow] = useState(null);
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
+
+  useEffect(() => {
+    dispatch(fetchWtns({ page: 1, pageSize: 100, storeId }));
+  }, [dispatch, storeId]);
+
+  const handleOpen = (row) => {
+    setSelectedRow(row);
+    setOpen(true);
+  };
+
   const handleClose = () => {
+    setSelectedRow(null);
     setOpen(false);
-    setViewMode(false);
-    setSelectedRow(null); // clear selected row
   };
 
   const columns = [
-    { key: "store", label: "Store" },
-    { key: "driverName", label: "Driver" },
+    { key: "storeName", label: "Store" },
+    { key: "driverId", label: "Driver ID" },
     { key: "wtnId", label: "WTN ID" },
     { key: "date", label: "Date" },
     { key: "numberOfTyres", label: "Number Of Tyres" },
-  ];
-
-  const data = [
     {
-      store: "Morrisons",
-      driverName: "John",
-      wtnId: "WTN-1234",
-      date: "28-8-2025",
-      numberOfTyres: "90",
-    },
-    {
-      store: "Waitrose",
-      driverName: "Rose",
-      wtnId: "WTN-1235",
-      date: "28-8-2025",
-      numberOfTyres: "190",
-    },
-    {
-      store: "Sainsbury's",
-      driverName: "Levl",
-      wtnId: "WTN-1236",
-      date: "28-8-2025",
-      numberOfTyres: "140",
+      key: "wtnFileUrl",
+      label: "WTN File",
+      render: (row) =>
+        row.wtnFileUrl ? (
+          <a
+            href={row.wtnFileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            View
+          </a>
+        ) : (
+          <span className="text-gray-400">No File</span>
+        ),
     },
   ];
 
@@ -60,39 +64,33 @@ const Wtns = () => {
     {
       icon: eyeOpen,
       label: "View",
-      onClick: (row) => {
-        setSelectedRow(row); // store the clicked row
-        setViewMode(true);
-        setOpen(true);
-      },
+      onClick: (row) => handleOpen(row),
     },
     {
       icon: downloadIcon,
       label: "Download",
       onClick: (row) => {
-        console.log("file downloaded");
+        if (row.wtnFileUrl) window.open(row.wtnFileUrl, "_blank");
       },
     },
   ];
 
   return (
-    <>
-      <div className="flex gap-6">
-        <SelectMenuComp
-          label="Store"
-          value={filterStore}
-          onChange={(e) => setFilterStore(e.target.value)}
-          options={[
-            { value: "Morrisons", label: "Morrisons" },
-            { value: "Waitrose", label: "Waitrose" },
-            { value: "Sainsbury's", label: "Sainsbury's" },
-          ]}
-        />
-        <SearchBarComp />
-      </div>
-      <div className="mt-5">
-        <TableDataComp columns={columns} data={data} actions={actions} />
-      </div>
+    <div>
+      <h2 className="text-xl font-bold mb-4">
+        {storeName ? `WTNs for ${storeName}` : "All WTNs"}
+      </h2>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <p className="text-red-500">Error: {error}</p>
+      ) : wtns.length > 0 ? (
+        <TableDataComp columns={columns} data={wtns} actions={actions} />
+      ) : (
+        <p>No WTNs found.</p>
+      )}
+
       <Dialog
         open={open}
         onClose={handleClose}
@@ -110,10 +108,10 @@ const Wtns = () => {
         }}
       >
         <DialogTitle
-          className="flex flex-row justify-between items-center font-[800] text-[20px] md:text-[24px] text-[#012622]"
+          className="flex justify-between items-center font-[800] text-[20px] md:text-[24px] text-[#012622]"
           sx={{ fontWeight: "600", fontSize: "20px", color: "#012622" }}
         >
-          {selectedRow ? "WTNs" : ""}
+          WTN Details
           <IconButton onClick={handleClose} sx={{ color: "#012622" }}>
             <CloseIcon />
           </IconButton>
@@ -124,12 +122,14 @@ const Wtns = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <p className="text-sm text-gray-600">Store</p>
-                <h6 className="text-lg font-semibold">{selectedRow.store}</h6>
+                <h6 className="text-lg font-semibold">
+                  {selectedRow.storeName}
+                </h6>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Driver</p>
+                <p className="text-sm text-gray-600">Driver ID</p>
                 <h6 className="text-lg font-semibold">
-                  {selectedRow.driverName}
+                  {selectedRow.driverId}
                 </h6>
               </div>
               <div>
@@ -146,11 +146,15 @@ const Wtns = () => {
                   {selectedRow.numberOfTyres}
                 </h6>
               </div>
+              <div>
+                <p className="text-sm text-gray-600">E-Signed</p>
+                <h6 className="text-lg font-semibold">{selectedRow.eSigned}</h6>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 

@@ -1,16 +1,14 @@
 // Import necessary libraries and components
-import React from "react";
+import React, { useState, useEffect } from "react";
 import useFormValidation from "../../hooks/useFormValidation";
 import OtpInput from "react-otp-input";
 import { NavLink, useNavigate } from "react-router-dom";
 import LogoComp from "../../layouts/LogoComp";
-
 import { Box } from "@mui/system";
 import arrow from "../../assets/images/arrow_1.png";
 import tyreLogin from "../../assets/images/tyre_login.jpg";
 import iconClock from "../../assets/images/iconClock.png";
 
-// Validation function
 const validateOTP = (values) => {
   let errors = {};
   if (!values.otp) {
@@ -25,42 +23,63 @@ const validateOTP = (values) => {
 
 const GetOTPcomp = () => {
   const navigate = useNavigate();
+  const [timer, setTimer] = useState(45);
+  const [canResend, setCanResend] = useState(false);
 
-  // Custom hook with initial state
   const { values, errors, handleChange, handleSubmit } = useFormValidation(
     { otp: "" },
     validateOTP
   );
 
-  const handleBack = () => {
-    navigate(-1); // go back one step
+  const handleBack = () => navigate(-1);
+
+  useEffect(() => {
+    if (timer > 0) {
+      const interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setCanResend(true);
+    }
+  }, [timer]);
+
+  const handleResend = () => {
+    if (canResend) {
+      console.log("Resending OTP...");
+      setTimer(45);
+      setCanResend(false);
+    }
   };
 
   return (
-    <div className="w-screen h-screen absolute bg-white flex flex-col md:flex-row">
-      {/* Logo */}
+    <div className="w-screen h-screen bg-white flex flex-col md:flex-row overflow-hidden">
       <LogoComp variant="login" />
 
-      {/* Back Arrow */}
-      <img
-        src={arrow}
-        alt="back_arrow"
-        className="h-6 w-6 relative left-[41px] top-[120px] cursor-pointer"
-        onClick={handleBack}
-      />
+      <div className="flex flex-col justify-center items-center flex-1 p-6 md:p-8">
+        {/* Back arrow - Below logo, on the left */}
+        <button
+          onClick={handleBack}
+          className="self-start mb-8 p-2 hover:bg-gray-100 rounded-full transition-colors group"
+          aria-label="Go back"
+        >
+          <img
+            src={arrow}
+            alt="back"
+            className="h-6 w-6 transition-transform group-hover:-translate-x-1"
+          />
+        </button>
 
-      {/* Left Side: OTP Form */}
-      <div className="flex flex-col justify-center items-center flex-1 p-6">
         <div className="w-full max-w-md space-y-6">
-          {/* Heading */}
-          <div className="space-y-2 text-left">
-            <h1 className="text-[40px] font-[700] md:text-4xl">Enter Code</h1>
-            <p className="text-[rgba(1, 38, 34, 1)] text-sm md:text-base font-normal">
-              Enter the security code we sent on your phone/email.
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#012622]">
+              Enter Code
+            </h1>
+            <p className="text-gray-600 text-sm sm:text-base">
+              Enter the security code we sent to your phone/email.
             </p>
           </div>
 
-          {/* Form */}
           <Box
             component="form"
             noValidate
@@ -70,63 +89,97 @@ const GetOTPcomp = () => {
               navigate("/resetpassword");
             })}
           >
-            {/* OTP Input */}
-            <OtpInput
-              value={values.otp}
-              onChange={(otp) => handleChange({ name: "otp", value: otp })}
-              numInputs={6}
-              shouldAutoFocus
-              containerStyle="flex justify-between gap-2 w-full"
-              renderSeparator={null}
-              renderInput={(props) => (
-                <input
-                  {...props}
-                  className="flex-1 min-w-[40px] h-[70px] border rounded-[4px] text-center text-xl font-semibold 
-                             focus:outline-none focus:ring-2 focus:ring-[#012622]"
-                />
-              )}
-            />
-
-            {/* Error Message (reserve space so layout doesn’t jump) */}
-            <p className="text-red-500 text-sm h-5 mt-2">{errors.otp || " "}</p>
-
-            {/* Resend Section */}
-            <div className="flex mt-2 gap-2 items-center text-[12px]">
-              <p>Didn't get the Text Message?</p>
-              <NavLink
-                to="/forget"
-                className="text-[12px] font-[400] text-[#E98A15] underline"
-              >
-                Resend it
-              </NavLink>
-              <img src={iconClock} alt="icon_clock" className="h-4 w-4" />
-              <p>45s</p>
+            <div className="mb-4">
+              <OtpInput
+                value={values.otp}
+                onChange={(otp) => handleChange({ name: "otp", value: otp })}
+                numInputs={6}
+                shouldAutoFocus
+                containerStyle="flex justify-between gap-2 w-full"
+                renderSeparator={null}
+                renderInput={(props) => (
+                  <input
+                    {...props}
+                    className="flex-1 min-w-[40px] max-w-[60px] h-[60px] sm:h-[70px] border-2 border-[#012622] rounded-lg text-center text-xl font-semibold 
+                               focus:outline-none focus:ring-2 focus:ring-[#012622] focus:border-[#012622] transition-all"
+                  />
+                )}
+              />
             </div>
 
-            {/* Submit Button */}
+            <p className="text-red-500 text-sm h-5 mb-2">{errors.otp || " "}</p>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600">
+              <span>Didn't get the code?</span>
+              {canResend ? (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  className="font-medium text-[#E98A15] hover:text-[#d17a0f] underline transition-colors"
+                >
+                  Resend it
+                </button>
+              ) : (
+                <span className="text-gray-400">Resend it</span>
+              )}
+              <div className="flex items-center gap-1">
+                <img
+                  src={iconClock}
+                  alt="timer"
+                  className="h-4 w-4 opacity-70"
+                />
+                <span
+                  className={`font-medium ${
+                    canResend ? "text-gray-400" : "text-[#012622]"
+                  }`}
+                >
+                  {timer}s
+                </span>
+              </div>
+            </div>
+
             <button
               type="submit"
-              className="w-full h-[55px] mt-6 bg-[#012622] text-white font-medium rounded-lg 
-                         text-base px-5 py-2.5 hover:opacity-90 focus:ring-4 focus:ring-[#012622] 
-                         focus:outline-none"
+              className="w-full h-[50px] sm:h-[55px] mt-6 bg-[#012622] text-white font-medium rounded-lg 
+                         text-base px-5 py-2.5 hover:bg-[#013a33] focus:ring-4 focus:ring-[#012622]/20 
+                         focus:outline-none transition-all"
             >
               Submit
             </button>
           </Box>
+
+          <div className="text-center">
+            <NavLink
+              to="/"
+              className="text-sm text-gray-600 hover:text-[#012622] transition-colors"
+            >
+              Remember your password?{" "}
+              <span className="font-medium text-[#012622]">Login</span>
+            </NavLink>
+          </div>
         </div>
       </div>
 
-      {/* Right Side: Image */}
-      <div className="hidden md:flex flex-1 justify-center items-center relative">
-        <div className="w-full h-screen rounded-3xl overflow-hidden relative p-6">
-          <img
-            src={tyreLogin}
-            alt="tyre_login"
-            className="w-full h-full object-cover rounded-3xl"
-          />
-          <h1 className="absolute bottom-20 left-90 transform -translate-x-1/2 text-white text-3xl font-bold">
-            TYRE RECYCLING SPECIALISTS
-          </h1>
+      <div className="hidden lg:flex flex-1 justify-center items-center bg-gray-50">
+        <div className="w-full h-full relative p-6">
+          <div className="w-full h-full rounded-3xl overflow-hidden relative shadow-2xl">
+            <img
+              src={tyreLogin}
+              alt="Tyre Recycling"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+              <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-bold leading-tight">
+                TYRE RECYCLING
+                <br />
+                SPECIALISTS
+              </h2>
+              <p className="text-white/90 text-sm md:text-base mt-3 max-w-md">
+                Sustainable solutions for a greener tomorrow
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

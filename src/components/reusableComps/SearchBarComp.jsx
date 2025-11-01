@@ -10,10 +10,10 @@ const SearchBarComp = ({ onChange, value, onSearch }) => {
     <div
       tabIndex="0"
       className="
-        w-[334px] max-w-full h-[60px] flex items-center
-        border border-[#e5e7eb]        
-        hover:border-[rgba(0,0,0,0.2)] 
-        focus-within:border-[rgba(0,0,0,0.2)] 
+        w-full max-w-[334px] h-[60px] flex items-center
+        border border-[#e5e7eb]
+        hover:border-[rgba(0,0,0,0.2)]
+        focus-within:border-[rgba(0,0,0,0.2)]
         rounded-lg shadow-sm
         outline-none
       "
@@ -25,7 +25,7 @@ const SearchBarComp = ({ onChange, value, onSearch }) => {
         onChange={onChange}
         startAdornment={
           <InputAdornment position="start" sx={{ ml: 1 }}>
-            <SearchIcon sx={{ color: "#6b7280" }} />
+            <SearchIcon sx={{ color: "#6b7280", marginTop: "-2px" }} />
           </InputAdornment>
         }
         sx={{
@@ -40,6 +40,7 @@ const SearchBarComp = ({ onChange, value, onSearch }) => {
             padding: 0,
             fontFamily: "ProximaNova, sans-serif",
             fontSize: "14px",
+            marginTop: "-5px",
           },
         }}
         inputProps={{ "aria-label": "search" }}

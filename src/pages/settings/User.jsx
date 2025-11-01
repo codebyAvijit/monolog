@@ -143,30 +143,6 @@ const User = () => {
     { key: "role", label: "Role" },
   ];
 
-  // const data = [
-  //   {
-  //     userId: "101",
-  //     user: "Noirn Smith",
-  //     email: "admin@company.com",
-  //     phoneNum: "+44 7712 345678",
-  //     role: "Administrator",
-  //   },
-  //   {
-  //     userId: "101",
-  //     user: "Noirn Smith",
-  //     email: "admin@company.com",
-  //     phoneNum: "+44 7712 345678",
-  //     role: "Administrator",
-  //   },
-  //   {
-  //     userId: "101",
-  //     user: "Noirn Smith",
-  //     email: "admin@company.com",
-  //     phoneNum: "+44 7712 345678",
-  //     role: "Administrator",
-  //   },
-  // ];
-
   const actions = [
     {
       icon: eyeOpen,
@@ -203,27 +179,33 @@ const User = () => {
 
   return (
     <>
-      <div className="flex flex-row flex-wrap justify-between mb-4">
-        <div className="flex flex-wrap gap-6 w-full flex-1 min-w-[250px]">
-          <SelectMenuComp
-            label="User"
-            value={userFilter}
-            onChange={(e) => setUserFilter(e.target.value)}
-            options={[
-              { value: "Admin", label: "Admin" },
-              { value: "User", label: "User" },
-            ]}
-          />
-          <SelectMenuComp
-            label="Role"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            options={[
-              { value: "Admin", label: "Admin" },
-              { value: "User", label: "User" },
-            ]}
-          />
-          <SearchBarComp />
+      <div className="flex flex-wrap gap-4 justify-between w-full">
+        <div className="flex flex-wrap gap-4 w-full sm:w-auto">
+          <div className="w-full sm:w-[334px]">
+            <SelectMenuComp
+              label="User"
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              options={[
+                { value: "Admin", label: "Admin" },
+                { value: "User", label: "User" },
+              ]}
+            />
+          </div>
+          <div className="w-full sm:w-[334px]">
+            <SelectMenuComp
+              label="Role"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              options={[
+                { value: "Admin", label: "Admin" },
+                { value: "User", label: "User" },
+              ]}
+            />
+          </div>
+          <div className="w-full sm:w-[334px]">
+            <SearchBarComp />
+          </div>
         </div>
 
         {/* Reusable ButtonComp */}
@@ -241,7 +223,7 @@ const User = () => {
           Add New User
         </ButtonComp>
       </div>
-      <div className="overflow-x-auto shadow rounded-lg">
+      <div className="overflow-x-auto shadow rounded-lg mt-5">
         <TableDataComp
           columns={columns}
           data={mainUserArray}
@@ -304,7 +286,7 @@ const User = () => {
               helperText={errors.email || ""}
             />
 
-            {/* ✅ Role inside grid with margin top */}
+            {/*  Role inside grid with margin top */}
             <div className="md:col-span-3 mt-6">
               <SelectMenuComp
                 label="Role"

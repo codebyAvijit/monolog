@@ -29,7 +29,7 @@ const DatePickerComp = ({
         onChange={onChange}
         slotProps={{
           textField: {
-            error, // ✅ tells TextField it's in error state
+            error, //  tells TextField it's in error state
             placeholder: placeholder,
             sx: {
               width: width,
@@ -63,7 +63,7 @@ const DatePickerComp = ({
                 borderColor: "#d32f2f",
               },
 
-              // ✅ text style
+              //  text style
               "& .MuiPickersInputBase-sectionContent": {
                 fontSize: "14px !important",
                 fontWeight: "400 !important",
@@ -78,7 +78,7 @@ const DatePickerComp = ({
                 color: "#012622 !important",
               },
 
-              // ✅ label style
+              //  label style
               "& .MuiInputLabel-root": {
                 fontSize: "14px !important",
                 fontWeight: "400 !important",
@@ -90,7 +90,7 @@ const DatePickerComp = ({
                 height: "100%",
               },
               "& .MuiInputLabel-root.Mui-error": {
-                color: "#d32f2f !important", // 🚨 red label when error
+                color: "#d32f2f !important", //  red label when error
               },
 
               "& .MuiOutlinedInput-root.Mui-focused": {

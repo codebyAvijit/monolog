@@ -74,10 +74,12 @@ const FormFieldComp = ({
     <div
       style={{
         position: "relative",
-        width: fullWidth ? "100%" : width,
+        width: fullWidth ? "100%" : "100%",
+        maxWidth: fullWidth ? "none" : width,
         height: "60px",
         // marginBottom: "26px", // Space for helper text + some padding
       }}
+      className="w-full"
     >
       <TextField
         placeholder={placeholder}
