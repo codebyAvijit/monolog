@@ -1,5 +1,5 @@
 // Import necessary libraries and components
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import LogoComp from "./LogoComp";
@@ -46,6 +46,10 @@ const Nav = () => {
     useState(false);
   const [notificationsCleared, setNotificationsCleared] = useState(false);
 
+  // Refs for click outside detection
+  const notificationRef = useRef(null);
+  const profileRef = useRef(null);
+
   const handeLogout = async () => {
     try {
       await dispatch(logout()).unwrap();
@@ -64,8 +68,28 @@ const Nav = () => {
           : "text-black hover:bg-[#012622] hover:text-white"
       }`;
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setIsNotificationIconClicked(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileClicked(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <nav className="relative w-full bg-white shadow-md px-4 py-3 flex items-center justify-between">
+    <nav className="relative w-full bg-white shadow-md px-4 py-3 flex items-center justify-between z-50">
       {/* Left: Logo */}
       <div className="flex items-center">
         <LogoComp variant="nav" />
@@ -98,45 +122,49 @@ const Nav = () => {
       {/* Right: Notification + User Avatar + Mobile Menu Button */}
       <div className="flex items-center space-x-4">
         {/* Notification Icon with badge */}
-        <div className="relative cursor-pointer">
-          <img
-            src={bellIcon}
-            alt="Notifications"
-            className="w-6 h-6"
+        <div className="relative" ref={notificationRef}>
+          <button
+            className="relative cursor-pointer focus:outline-none p-1"
             onClick={() => {
               setIsNotificationIconClicked(!isNotificationIconClicked);
               if (!isNotificationIconClicked) {
                 setNotificationsCleared(true);
               }
             }}
-          />
+            aria-label="Toggle notifications"
+          >
+            <img
+              src={bellIcon}
+              alt="Notifications"
+              className="w-6 h-6 pointer-events-none"
+            />
 
-          {/* Show badge only if dropdown not opened and not cleared */}
-          {!isNotificationIconClicked && !notificationsCleared && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              {notificationsArray.length}
-            </span>
-          )}
+            {/* Show badge only if dropdown not opened and not cleared */}
+            {!isNotificationIconClicked && !notificationsCleared && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+                {notificationsArray.length}
+              </span>
+            )}
+          </button>
 
           {/* Conditional Pop-up */}
           {isNotificationIconClicked && (
-            <div className="absolute right-0 mt-2 z-[1001]">
-              <NoticationsPopUp
-                notificationsArray={notificationsArray}
-                setNotificationsArray={setNotificationsArray}
-              />
-            </div>
+            <NoticationsPopUp
+              notificationsArray={notificationsArray}
+              setNotificationsArray={setNotificationsArray}
+            />
           )}
         </div>
 
         {/* User Avatar */}
-        <div className="relative">
-          <div
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-[#012622] text-white font-bold cursor-pointer"
+        <div className="relative" ref={profileRef}>
+          <button
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-[#012622] text-white font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#012622] focus:ring-offset-2"
             onClick={() => setIsProfileClicked(!isProfileClicked)}
+            aria-label="Toggle profile menu"
           >
             R
-          </div>
+          </button>
 
           {/* Profile Popup */}
           {isProfileClicked && (
@@ -182,8 +210,8 @@ const Nav = () => {
               </div>
 
               {/* Logout */}
-              <div
-                className="flex items-center gap-2 text-[#E63946] cursor-pointer hover:text-red-600 transition"
+              <button
+                className="flex items-center gap-2 text-[#E63946] cursor-pointer hover:text-red-600 transition w-full"
                 onClick={handeLogout}
               >
                 <svg
@@ -201,7 +229,7 @@ const Nav = () => {
                   />
                 </svg>
                 <span className="text-sm font-medium">Logout</span>
-              </div>
+              </button>
             </div>
           )}
         </div>
