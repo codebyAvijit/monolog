@@ -44,19 +44,21 @@ const Wtns = () => {
     {
       key: "wtnFileUrl",
       label: "WTN File",
-      render: (row) =>
-        row.wtnFileUrl ? (
+      render: (val, row) => {
+        const url = row?.wtnFileUrl || val;
+        return url ? (
           <a
-            href={row.wtnFileUrl}
+            href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 underline"
+            className="text-[rgba(233,138,21,1)] underline"
           >
             View
           </a>
         ) : (
           <span className="text-gray-400">No File</span>
-        ),
+        );
+      },
     },
   ];
 

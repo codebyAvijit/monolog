@@ -31,74 +31,76 @@ const App = () => {
   return (
     <>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LoginSrceen />}></Route>
-          <Route path="/forget" element={<ForgotPassword />}></Route>
-          <Route path="/getotp" element={<GetOTPcomp />}></Route>
-          <Route path="/resetpassword" element={<ResetPassword />}></Route>
+        <div className="pt-15 md:pt-15 lg:pt-15">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LoginSrceen />}></Route>
+            <Route path="/forget" element={<ForgotPassword />}></Route>
+            <Route path="/getotp" element={<GetOTPcomp />}></Route>
+            <Route path="/resetpassword" element={<ResetPassword />}></Route>
 
-          {/* Protected Routes */}
-          <Route
-            path="/viewallnotications"
-            element={
-              <ProtectedRoute>
-                <ViewAllNotifications />
-              </ProtectedRoute>
-            }
-          ></Route>
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          ></Route>
-          <Route
-            path="/setting"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="subscription" replace />} />
-            <Route path="subscription" element={<SubscriptionPlan />} />
-            <Route path="driver" element={<Driver />} />
-            <Route path="role" element={<Role />} />
-            <Route path="user" element={<User />} />
-            <Route path="postcode" element={<PostCode />} />
-          </Route>
-          <Route
-            path="/pickups"
-            element={
-              <ProtectedRoute>
-                <Pickups />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="subPickups" replace />} />
-            <Route path="subPickups" element={<SubPickups />} />
-            <Route path="manage" element={<ManageSchedulePickups />} />
-            <Route path="assign" element={<ManageScheduleAssign />} />
-            <Route path="drivertracking" element={<DriverTracking />} />
-            <Route path="pickupsHistory" element={<PickupsHistory />} />
-          </Route>
-          <Route
-            path="/store"
-            element={
-              <ProtectedRoute>
-                <Store />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="manageStore" replace />} />
-            <Route path="manageStore" element={<ManageStore />} />
-            <Route path="wtns" element={<Wtns />} />
-            <Route path="invoices" element={<Invoices />} />
-          </Route>
-        </Routes>
+            {/* Protected Routes */}
+            <Route
+              path="/viewallnotications"
+              element={
+                <ProtectedRoute>
+                  <ViewAllNotifications />
+                </ProtectedRoute>
+              }
+            ></Route>
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            ></Route>
+            <Route
+              path="/setting"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="subscription" replace />} />
+              <Route path="subscription" element={<SubscriptionPlan />} />
+              <Route path="driver" element={<Driver />} />
+              <Route path="role" element={<Role />} />
+              <Route path="user" element={<User />} />
+              <Route path="postcode" element={<PostCode />} />
+            </Route>
+            <Route
+              path="/pickups"
+              element={
+                <ProtectedRoute>
+                  <Pickups />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="subPickups" replace />} />
+              <Route path="subPickups" element={<SubPickups />} />
+              <Route path="manage" element={<ManageSchedulePickups />} />
+              <Route path="assign" element={<ManageScheduleAssign />} />
+              <Route path="drivertracking" element={<DriverTracking />} />
+              <Route path="pickupsHistory" element={<PickupsHistory />} />
+            </Route>
+            <Route
+              path="/store"
+              element={
+                <ProtectedRoute>
+                  <Store />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="manageStore" replace />} />
+              <Route path="manageStore" element={<ManageStore />} />
+              <Route path="wtns" element={<Wtns />} />
+              <Route path="invoices" element={<Invoices />} />
+            </Route>
+          </Routes>
+        </div>
       </LocalizationProvider>
     </>
   );

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPickupHistoryData } from "../../redux/pickupHistorySlice";
 import SelectMenuComp from "../../components/reusableComps/SelectMenuComp";
 import SearchBarComp from "../../components/reusableComps/SearchBarComp";
 import TableDataComp from "../../components/reusableComps/TableDataComp";
@@ -13,14 +15,12 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import ButtonComp from "../../components/reusableComps/ButtonComp";
 import { DateRangePicker } from "rsuite";
-// importing rsuite styles
 import "rsuite/dist/rsuite-no-reset.min.css";
 import "./dateRangePicker.css";
 import { NavLink } from "react-router-dom";
 
 const pdfURL =
   "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf";
-
 const wtnURL =
   "https://www.scribd.com/document/842007375/WTN-Waste-Transfer-Note-En-Updated";
 
@@ -30,14 +30,16 @@ const PickupsHistory = () => {
   const [filterRouteId, setFilterRouteId] = useState("");
   const [filterDriverName, setFilterDriverName] = useState("");
   const [filterVehicleNumber, setFilterVehicleNumber] = useState("");
-
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    setViewMode(false);
-  };
+  const dispatch = useDispatch();
+  const { pickupHistory, loading, error } = useSelector(
+    (state) => state.pickupHistory
+  );
+
+  useEffect(() => {
+    dispatch(fetchPickupHistoryData({ page: 1, pageSize: 10 }));
+  }, [dispatch]);
 
   const columns = [
     { key: "tripId", label: "Trip ID" },
@@ -165,69 +167,77 @@ const PickupsHistory = () => {
     },
   ];
 
+  const handleClose = () => {
+    setOpen(false);
+    setViewMode(false);
+  };
+
   return (
     <>
-      {/* Filters Section - Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
-        <div className="my-rsuite">
-          <DateRangePicker
-            placeholder=":"
-            className="custom-date-range"
-            format="dd/MM/yyyy"
-            showOneCalendar
-            style={{ width: "100%", height: 60 }}
-            label="Select Date"
+      {/* Filters Section */}
+      <div className="w-full mx-auto max-w-[1800px] px-4 md:px-8 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
+          <div className="my-rsuite">
+            <DateRangePicker
+              placeholder=":"
+              className="custom-date-range"
+              format="dd/MM/yyyy"
+              showOneCalendar
+              style={{ width: "100%", height: 60 }}
+              label="Select Date"
+            />
+          </div>
+          <SelectMenuComp
+            label="Route ID"
+            name="filterRouteId"
+            value={filterRouteId}
+            onChange={(e) => setFilterRouteId(e.target.value)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "Route-2001", label: "Route-2001" },
+              { value: "Route-2002", label: "Route-2002" },
+              { value: "Route-2003", label: "Route-2003" },
+              { value: "Route_2004", label: "Route_2004" },
+            ]}
           />
+          <SelectMenuComp
+            label="Driver Name"
+            name="filterDriverName"
+            value={filterDriverName}
+            onChange={(e) => setFilterDriverName(e.target.value)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "John", label: "John" },
+              { value: "Doe", label: "Doe" },
+              { value: "Sarah", label: "Sarah" },
+              { value: "Cahan", label: "Cahan" },
+            ]}
+          />
+          <SelectMenuComp
+            label="Vehicle Number"
+            name="filterVehicleNumber"
+            value={filterVehicleNumber}
+            onChange={(e) => setFilterVehicleNumber(e.target.value)}
+            options={[
+              { value: "LX20 BCD", label: "LX20 BCD" },
+              { value: "LX20 BCD", label: "LX20 BCD" },
+              { value: "LX20 BCD", label: "LX20 BCD" },
+              { value: "LX20 BCD", label: "LX20 BCD" },
+              { value: "LX20 BCD", label: "LX20 BCD" },
+            ]}
+          />
+          <SearchBarComp />
         </div>
-
-        <SelectMenuComp
-          label="Route ID"
-          name="filterRouteId"
-          value={filterRouteId}
-          onChange={(e) => setFilterRouteId(e.target.value)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "Route-2001", label: "Route-2001" },
-            { value: "Route-2002", label: "Route-2002" },
-            { value: "Route-2003", label: "Route-2003" },
-            { value: "Route_2004", label: "Route_2004" },
-          ]}
-        />
-
-        <SelectMenuComp
-          label="Driver Name"
-          name="filterDriverName"
-          value={filterDriverName}
-          onChange={(e) => setFilterDriverName(e.target.value)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "John", label: "John" },
-            { value: "Doe", label: "Doe" },
-            { value: "Sarah", label: "Sarah" },
-            { value: "Cahan", label: "Cahan" },
-          ]}
-        />
-
-        <SelectMenuComp
-          label="Vehicle Number"
-          name="filterVehicleNumber"
-          value={filterVehicleNumber}
-          onChange={(e) => setFilterVehicleNumber(e.target.value)}
-          options={[
-            { value: "LX20 BCD", label: "LX20 BCD" },
-            { value: "LX20 BCD", label: "LX20 BCD" },
-            { value: "LX20 BCD", label: "LX20 BCD" },
-            { value: "LX20 BCD", label: "LX20 BCD" },
-            { value: "LX20 BCD", label: "LX20 BCD" },
-          ]}
-        />
-
-        <SearchBarComp />
       </div>
 
       {/* Table */}
-      <div className="mt-5">
-        <TableDataComp columns={columns} data={data} actions={actions} />
+      <div className="overflow-x-auto rounded-lg mx-auto max-w-[1800px] px-4 md:px-8 mt-6">
+        <TableDataComp
+          columns={columns}
+          data={pickupHistory}
+          actions={actions}
+          loading={loading}
+        />
       </div>
 
       {/* View Dialog */}
@@ -240,20 +250,19 @@ const PickupsHistory = () => {
         slotProps={{
           paper: {
             sx: {
-              width: { xs: "95%", sm: "90%", md: "85%" },
-              maxWidth: "1177px",
-              margin: { xs: "8px", sm: "16px" },
+              width: { xs: "95%", sm: "90%", md: "clamp(820px, 70vw, 1200px)" },
+              margin: { xs: "12px", sm: "24px auto" },
+              borderRadius: "14px",
               maxHeight: { xs: "90vh", sm: "85vh" },
-              borderRadius: "12px",
               overflowY: "auto",
+              overflowX: "hidden",
             },
           },
         }}
       >
-        {/* Title */}
         <DialogTitle
           sx={{
-            fontWeight: "600",
+            fontWeight: 700,
             fontSize: { xs: "16px", md: "18px", lg: "20px" },
             color: "#012622",
             display: "flex",
@@ -265,7 +274,6 @@ const PickupsHistory = () => {
             gap: 2,
           }}
         >
-          {/* Heading + Status Badge */}
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm md:text-base lg:text-lg">
               Trip Details - {selectedRow?.tripId}
@@ -276,8 +284,6 @@ const PickupsHistory = () => {
               </span>
             )}
           </div>
-
-          {/* Close button */}
           <IconButton
             onClick={handleClose}
             sx={{
@@ -288,17 +294,10 @@ const PickupsHistory = () => {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-
-        {/* Content */}
-        <DialogContent
-          sx={{
-            p: { xs: 2, sm: 3 },
-            mt: 2,
-          }}
-        >
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, mt: 2 }}>
           {viewMode && (
             <>
-              {/* Trip Information Grid */}
+              {/* Trip Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-6">
                 {[
                   { label: "Trip ID", value: selectedRow?.tripId },
@@ -316,30 +315,18 @@ const PickupsHistory = () => {
                     value: selectedRow?.tripEndDateTime,
                   },
                   {
+                    label: "Total Pick-up Locations",
+                    value: selectedRow?.totalPickupLocation,
+                  },
+                  {
                     label: "Total Tyres Collected",
                     value: selectedRow?.totalTyresCollected,
                   },
-                  {
-                    label: "Mileage (kilometre)",
-                    value: selectedRow?.mileage,
-                  },
-                  {
-                    label: "Total Duration (hours)",
-                    value: selectedRow?.tripDuration,
-                  },
+                  { label: "Mileage (kilometre)", value: selectedRow?.mileage },
+                  { label: "Trip Duration", value: selectedRow?.tripDuration },
                   {
                     label: "Weighment Slip",
-                    value: selectedRow ? (
-                      <NavLink
-                        to={pdfURL}
-                        target="_blank"
-                        className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
-                      >
-                        Weighment Slip
-                      </NavLink>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    ),
+                    value: selectedRow?.weighmentSlip,
                   },
                 ].map((item, i) => (
                   <div key={i}>
@@ -353,7 +340,7 @@ const PickupsHistory = () => {
                 ))}
               </div>
 
-              {/* Pick-up Details Section */}
+              {/* Pick-up Details */}
               <div className="mb-6">
                 <h2 className="text-base md:text-lg font-semibold mb-3 text-[#012622]">
                   Pick-up Details (Per Store)
@@ -363,40 +350,9 @@ const PickupsHistory = () => {
                   data={dataForModalPickupDetail}
                 />
               </div>
-
-              {/* Delivery Details Section */}
-              <div className="mb-4">
-                <h2 className="text-base md:text-lg font-semibold mb-3 text-[#012622]">
-                  Delivery Details (Recycle Plant)
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {[
-                    { label: "Recycle Plant Name", value: "Recycle Hub" },
-                    {
-                      label: "Arrival Time at Plant",
-                      value: "03/07/2025, 04:00 PM",
-                    },
-                    {
-                      label: "Total Tyres Delivered",
-                      value: "470",
-                    },
-                  ].map((item, i) => (
-                    <div key={i}>
-                      <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">
-                        {item.label}
-                      </p>
-                      <h6 className="text-sm md:text-base font-semibold text-gray-900">
-                        {item.value}
-                      </h6>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </>
           )}
         </DialogContent>
-
-        {/* Close Button */}
         <DialogActions
           sx={{
             justifyContent: "center",

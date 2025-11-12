@@ -9,6 +9,7 @@ import {
 import { subPlanValidationConfig } from "../../utils/subPlanValidationConfig";
 import { validateFields } from "../../utils/validation";
 import {
+  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -28,6 +29,7 @@ import ButtonComp from "../../components/reusableComps/ButtonComp";
 import TableDataComp from "../../components/reusableComps/TableDataComp";
 import FormFieldComp from "../../components/reusableComps/FormFieldComp";
 import DatePickerComp from "../../components/reusableComps/DatePickerComp";
+import DeleteConfirmationPrompt from "../../components/reusableComps/DeleteConfirmationPrompt";
 
 const validateAllFields = (values, express) => {
   return validateFields(values, subPlanValidationConfig, {
@@ -54,7 +56,13 @@ const SubscriptionPlan = () => {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
-    alignItems: "center",
+    severity: "success",
+  });
+
+  //  Delete confirmation dialog state
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    planId: null,
   });
 
   const [form, setForm] = useState({
@@ -183,14 +191,14 @@ const SubscriptionPlan = () => {
         setSnackbar({
           open: true,
           message: "Plan updated successfully",
-          alignItems: "center",
+          severity: "success",
         });
       } else {
         await dispatch(createSubscriptionPlan(payload)).unwrap();
         setSnackbar({
           open: true,
           message: "Plan created successfully",
-          alignItems: "center",
+          severity: "success",
         });
       }
       handleClose();
@@ -198,22 +206,37 @@ const SubscriptionPlan = () => {
       setSnackbar({
         open: true,
         message: `Error: ${error.message || "Operation failed"}`,
+        severity: "error",
       });
     }
   };
 
-  const deleteItem = async (id) => {
-    if (window.confirm("Are you sure you want to proceed?")) {
-      try {
-        await dispatch(deleteSubscriptionPlan(id)).unwrap();
-        setSnackbar({ open: true, message: "Plan deleted successfully" });
-        await dispatch(fetchSubscriptionPlans()).unwrap();
-      } catch (error) {
-        setSnackbar({
-          open: true,
-          message: `Error: ${error.message || "Deletion failed"}`,
-        });
-      }
+  //  Open delete confirmation dialog
+  const handleDeleteClick = (id) => {
+    setDeleteDialog({ open: true, planId: id });
+  };
+
+  //  Close delete confirmation dialog
+  const handleDeleteClose = () => {
+    setDeleteDialog({ open: false, planId: null });
+  };
+
+  //  Confirm delete action
+  const handleDeleteConfirm = async () => {
+    try {
+      await dispatch(deleteSubscriptionPlan(deleteDialog.planId)).unwrap();
+      setSnackbar({
+        open: true,
+        message: "Plan deleted successfully",
+        severity: "info",
+      });
+      await dispatch(fetchSubscriptionPlans()).unwrap();
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: `Error: ${error.message || "Deletion failed"}`,
+        severity: "error",
+      });
     }
   };
 
@@ -264,7 +287,7 @@ const SubscriptionPlan = () => {
       icon: deleteIcon,
       label: "Delete",
       color: "text-red-600 hover:text-red-800",
-      onClick: (row) => deleteItem(row.id),
+      onClick: (row) => handleDeleteClick(row.id), //  Updated to use dialog
     },
   ];
 
@@ -291,65 +314,73 @@ const SubscriptionPlan = () => {
       )}
       {!loading && !error && (
         <>
-          {/* Filters Section - Responsive */}
-          <div className="flex flex-wrap gap-5 justify-between items-end w-full">
-            {/* Left group: Plan Type + Status + Search Bar */}
-            <div className="flex flex-wrap gap-4">
-              <div className="w-full sm:w-[334px]">
-                <SelectMenuComp
-                  label="Plan Type"
-                  name="planTypeFilter"
-                  value={planTypeFilter}
-                  onChange={(e) => setPlanTypeFilter(e.target.value)}
-                  options={[
-                    { value: "", label: "All" },
-                    { value: "standard", label: "Standard" },
-                    { value: "premium", label: "Premium" },
-                  ]}
-                  sx={{ borderRadius: "10px" }}
-                />
-              </div>
-              <div className="w-full sm:w-[334px]">
-                <SelectMenuComp
-                  label="Status"
-                  name="statusFilter"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  options={[
-                    { value: "", label: "All" },
-                    { value: "Active", label: "Active" },
-                    { value: "Inactive", label: "Inactive" },
-                  ]}
-                  sx={{ borderRadius: "10px" }}
-                />
-              </div>
-              <div className="w-full sm:w-[334px]">
-                <SearchBarComp
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
+          {/* Filters Section */}
+          <div
+            className="w-full mx-auto container-3xl"
+            style={{ padding: "clamp(16px, 2vw, 25px)" }}
+          >
+            <div className="flex flex-wrap gap-4 items-end justify-between">
+              <div className="w-full sm:w-auto flex flex-wrap gap-4">
+                <div className="w-full sm:w-[283px]">
+                  <SelectMenuComp
+                    label="Plan Type"
+                    name="planTypeFilter"
+                    value={planTypeFilter}
+                    onChange={(e) => setPlanTypeFilter(e.target.value)}
+                    options={[
+                      { value: "", label: "All" },
+                      { value: "monthly", label: "Monthly" },
+                      { value: "half_yearly", label: "Half Yearly" },
+                      { value: "yearly", label: "Yearly" },
+                    ]}
+                  />
+                </div>
 
-            {/* Right side: Button */}
-            <div className="w-full sm:w-auto">
-              <ButtonComp
-                variant="contained"
-                width="standard"
-                sx={{
-                  height: { xs: "50px", md: "60px" },
-                  fontSize: { xs: "14px", md: "16px" },
-                  width: { xs: "100%", sm: "auto" },
-                }}
-                onClick={handleOpen}
-              >
-                Add New Subscription Plan
-              </ButtonComp>
+                <div className="w-full sm:w-[283px]">
+                  <SelectMenuComp
+                    label="Status"
+                    name="statusFilter"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    options={[
+                      { value: "", label: "All" },
+                      { value: "Active", label: "Active" },
+                      { value: "Inactive", label: "Inactive" },
+                    ]}
+                  />
+                </div>
+
+                <div className="w-full sm:w-[283px]">
+                  <SearchBarComp
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="w-full sm:w-[254px]">
+                <ButtonComp
+                  variant="contained"
+                  sx={{
+                    width: "100%",
+                    height: "60px",
+                  }}
+                  onClick={handleOpen}
+                >
+                  Add New Subscription Plan
+                </ButtonComp>
+              </div>
             </div>
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto mt-5 shadow rounded-lg">
+          <div
+            className="overflow-x-auto rounded-lg mx-auto container-3xl"
+            style={{
+              marginTop: "clamp(20px, 2vh, 32px)",
+              padding: "0 clamp(16px, 2vw, 25px)",
+            }}
+          >
             <TableDataComp
               columns={columns}
               data={filteredPlans}
@@ -357,7 +388,7 @@ const SubscriptionPlan = () => {
             />
           </div>
 
-          {/* Dialog - Responsive */}
+          {/* Form Dialog */}
           <Dialog
             open={open}
             onClose={handleClose}
@@ -367,15 +398,38 @@ const SubscriptionPlan = () => {
             slotProps={{
               paper: {
                 sx: {
-                  width: { xs: "95%", sm: "90%", md: "85%" },
-                  maxWidth: "1280px",
-                  height: { xs: "auto", md: "598px" },
-                  maxHeight: { xs: "90vh", md: "90vh" },
-                  margin: { xs: "8px", sm: "16px" },
-                  borderRadius: "12px",
-                  p: 0,
-                  display: "flex",
-                  flexDirection: "column",
+                  width: {
+                    xs: "calc(100% - 32px)",
+                    sm: "90%",
+                    md: "85%",
+                    lg: "clamp(900px, 80vw, 1280px)",
+                  },
+                  margin: {
+                    xs: "16px",
+                    sm: "32px auto",
+                    md: "40px auto",
+                  },
+                  borderRadius: {
+                    xs: "16px",
+                    sm: "20px",
+                    md: "22px",
+                  },
+                  padding: {
+                    xs: "16px",
+                    sm: "20px",
+                    md: "24px",
+                  },
+                  height: "auto",
+                  minHeight: {
+                    xs: "300px",
+                    sm: "350px",
+                  },
+                  maxHeight: {
+                    xs: "calc(100vh - 32px)",
+                    sm: "90vh",
+                    md: "85vh",
+                  },
+                  overflow: "hidden",
                 },
               },
             }}
@@ -384,13 +438,22 @@ const SubscriptionPlan = () => {
           >
             <DialogTitle
               sx={{
-                fontWeight: "600",
-                fontSize: { xs: "18px", md: "20px", lg: "24px" },
+                fontWeight: "800",
+                fontSize: {
+                  xs: "18px",
+                  sm: "20px",
+                  md: "22px",
+                  lg: "24px",
+                },
                 color: "#012622",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                p: { xs: "16px", sm: "20px" },
+                padding: {
+                  xs: "16px 16px 12px 16px",
+                  sm: "20px 20px 16px 20px",
+                  md: "24px 24px 16px 24px",
+                },
               }}
             >
               {viewMode
@@ -400,106 +463,164 @@ const SubscriptionPlan = () => {
                 : "Add New Subscription"}
               <IconButton
                 onClick={handleClose}
-                sx={{ color: "#012622", ml: 2 }}
+                sx={{
+                  color: "#012622",
+                  width: {
+                    xs: "36px",
+                    sm: "40px",
+                    md: "44px",
+                  },
+                  height: {
+                    xs: "36px",
+                    sm: "40px",
+                    md: "44px",
+                  },
+                  padding: 0,
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
+                }}
               >
-                <CloseIcon />
+                <CloseIcon
+                  sx={{
+                    fontSize: {
+                      xs: "20px",
+                      sm: "22px",
+                      md: "24px",
+                    },
+                  }}
+                />
               </IconButton>
             </DialogTitle>
 
             <DialogContent
               sx={{
-                flex: 1,
-                overflow: "auto",
-                px: { xs: 2, sm: 3 },
-                py: 2,
+                padding: {
+                  xs: "16px",
+                  sm: "20px",
+                  md: "24px 32px",
+                },
+                overflowY: "auto",
+                overflowX: "hidden",
               }}
             >
               {/* Main Form Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 lg:gap-x-8 gap-y-6 pt-2">
-                <FormFieldComp
-                  label="Plan Name"
-                  name="planName"
-                  value={form.planName}
-                  onChange={handleChange}
-                  error={!!errors.planName}
-                  helperText={errors.planName || ""}
-                  disabled={viewMode}
-                />
-                <SelectMenuComp
-                  label="Plan Type"
-                  name="planType"
-                  value={form.planType}
-                  onChange={handleChange}
-                  error={!!errors.planType}
-                  helperText={errors.planType || ""}
-                  options={[
-                    { value: "monthly", label: "monthly" },
-                    { value: "half_yearly", label: "half_yearly" },
-                    { value: "yearly", label: "yearly" },
-                  ]}
-                  disabled={viewMode}
-                />
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: "20px",
+                  width: "100%",
+                  // backgroundColor: "red",
+                  marginTop: "5px",
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <FormFieldComp
+                    label="Plan Name"
+                    name="planName"
+                    value={form.planName}
+                    onChange={handleChange}
+                    error={!!errors.planName}
+                    helperText={errors.planName || ""}
+                    disabled={viewMode}
+                  />
+                </div>
 
-                <FormFieldComp
-                  label="Amount"
-                  name="amount"
-                  value={form.amount}
-                  onChange={handleChange}
-                  error={!!errors.amount}
-                  helperText={errors.amount || ""}
-                  disabled={viewMode}
-                />
-                <SelectMenuComp
-                  label="Status"
-                  name="planStatus"
-                  value={form.planStatus}
-                  onChange={handleChange}
-                  error={!!errors.planStatus}
-                  helperText={errors.planStatus || " "}
-                  options={[
-                    { value: "Active", label: "Active" },
-                    { value: "Inactive", label: "Inactive" },
-                  ]}
-                  disabled={viewMode}
-                />
-                <FormFieldComp
-                  label="Maximum Standard Pick-ups"
-                  name="standardPickups"
-                  value={form.standardPickups}
-                  onChange={handleChange}
-                  error={!!errors.standardPickups}
-                  helperText={errors.standardPickups || ""}
-                  disabled={viewMode}
-                />
-                <FormFieldComp
-                  label="Per Tyre Amount"
-                  name="perTyreAmount"
-                  value={form.perTyreAmount}
-                  onChange={handleChange}
-                  error={!!errors.perTyreAmount}
-                  helperText={errors.perTyreAmount || ""}
-                  disabled={viewMode}
-                />
-                <DatePickerComp
-                  label="Plan Activation Date"
-                  value={
-                    form.planActivationDate
-                      ? dayjs(form.planActivationDate)
-                      : null
-                  }
-                  isActive
-                  onChange={(newValue) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      planActivationDate: newValue ? dayjs(newValue) : null,
-                    }))
-                  }
-                  placeholder="Select Activation Date"
-                  error={!!errors.planActivationDate}
-                  helperText={errors.planActivationDate || ""}
-                  disabled={viewMode}
-                  className="bg-[#E5E5E5]"
-                />
+                <div style={{ minWidth: 0 }}>
+                  <FormFieldComp
+                    label="Amount"
+                    name="amount"
+                    value={form.amount}
+                    onChange={handleChange}
+                    error={!!errors.amount}
+                    helperText={errors.amount || ""}
+                    disabled={viewMode}
+                  />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <FormFieldComp
+                    label="Maximum Standard Pick-ups"
+                    name="standardPickups"
+                    value={form.standardPickups}
+                    onChange={handleChange}
+                    error={!!errors.standardPickups}
+                    helperText={errors.standardPickups || ""}
+                    disabled={viewMode}
+                  />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <FormFieldComp
+                    label="Per Tyre Amount"
+                    name="perTyreAmount"
+                    value={form.perTyreAmount}
+                    onChange={handleChange}
+                    error={!!errors.perTyreAmount}
+                    helperText={errors.perTyreAmount || ""}
+                    disabled={viewMode}
+                  />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <SelectMenuComp
+                    label="Type of Plan"
+                    name="planType"
+                    value={form.planType}
+                    onChange={handleChange}
+                    error={!!errors.planType}
+                    helperText={errors.planType || ""}
+                    options={[
+                      { value: "monthly", label: "monthly" },
+                      { value: "half_yearly", label: "half_yearly" },
+                      { value: "yearly", label: "yearly" },
+                    ]}
+                    disabled={viewMode}
+                    sx={{ maxWidth: "334px" }}
+                  />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <DatePickerComp
+                    label="Plan Activation Date"
+                    value={
+                      form.planActivationDate
+                        ? dayjs(form.planActivationDate)
+                        : null
+                    }
+                    isActive
+                    onChange={(newValue) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        planActivationDate: newValue ? dayjs(newValue) : null,
+                      }))
+                    }
+                    placeholder="Select Activation Date"
+                    error={!!errors.planActivationDate}
+                    helperText={errors.planActivationDate || ""}
+                    disabled={viewMode}
+                    className="bg-[#E5E5E5]"
+                    maxWidth="334px"
+                  />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <SelectMenuComp
+                    label="Status"
+                    name="planStatus"
+                    value={form.planStatus}
+                    onChange={handleChange}
+                    error={!!errors.planStatus}
+                    helperText={errors.planStatus || " "}
+                    options={[
+                      { value: "Active", label: "Active" },
+                      { value: "Inactive", label: "Inactive" },
+                    ]}
+                    disabled={viewMode}
+                    sx={{ maxWidth: "334px" }}
+                  />
+                </div>
               </div>
 
               {/* Express Pickups Toggle */}
@@ -524,25 +645,40 @@ const SubscriptionPlan = () => {
 
               {/* Express Pickups Fields */}
               {express && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 mt-5">
-                  <FormFieldComp
-                    label="Maximum Number of Express Pickups"
-                    name="expressPickups"
-                    value={form.expressPickups}
-                    onChange={handleChange}
-                    error={!!errors.expressPickups}
-                    helperText={errors.expressPickups || ""}
-                    disabled={viewMode}
-                  />
-                  <FormFieldComp
-                    label="Per Tyre Amount of Express Pickups"
-                    name="expressTyreAmount"
-                    value={form.expressTyreAmount}
-                    onChange={handleChange}
-                    error={!!errors.expressTyreAmount}
-                    helperText={errors.expressTyreAmount || ""}
-                    disabled={viewMode}
-                  />
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: "20px",
+                    width: "100%",
+                    marginTop: "20px",
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <FormFieldComp
+                      label="Maximum Number of Express Pickups"
+                      name="expressPickups"
+                      value={form.expressPickups}
+                      onChange={handleChange}
+                      error={!!errors.expressPickups}
+                      helperText={errors.expressPickups || ""}
+                      disabled={viewMode}
+                    />
+                  </div>
+
+                  <div style={{ minWidth: 0 }}>
+                    <FormFieldComp
+                      label="Per Tyre Amount of Express Pickups"
+                      name="expressTyreAmount"
+                      value={form.expressTyreAmount}
+                      onChange={handleChange}
+                      error={!!errors.expressTyreAmount}
+                      helperText={errors.expressTyreAmount || ""}
+                      disabled={viewMode}
+                    />
+                  </div>
+
+                  <div style={{ minWidth: 0 }}></div>
                 </div>
               )}
             </DialogContent>
@@ -551,19 +687,29 @@ const SubscriptionPlan = () => {
               <DialogActions
                 sx={{
                   justifyContent: "center",
-                  gap: { xs: 2, sm: 3 },
-                  pb: { xs: 2, sm: 3 },
-                  px: { xs: 2, sm: 3 },
+                  gap: "12px",
+                  paddingBottom: {
+                    xs: "16px",
+                    sm: "20px",
+                    md: "24px",
+                  },
+                  paddingX: {
+                    xs: "16px",
+                    sm: "20px",
+                    md: "24px",
+                  },
                   flexWrap: "wrap",
                 }}
               >
                 <ButtonComp
                   variant="contained"
                   sx={{
-                    width: { xs: "100%", sm: "120px" },
-                    height: { xs: "50px", md: "60px" },
-                    fontSize: { xs: "14px", md: "16px" },
-                    borderRadius: "6px",
+                    width: {
+                      xs: "100%",
+                      sm: "140px",
+                    },
+                    height: "52px",
+                    minWidth: "120px",
                   }}
                   onClick={handleSave}
                 >
@@ -572,10 +718,13 @@ const SubscriptionPlan = () => {
                 <ButtonComp
                   variant="outlined"
                   sx={{
-                    width: { xs: "100%", sm: "120px" },
-                    height: { xs: "50px", md: "60px" },
-                    fontSize: { xs: "14px", md: "16px" },
-                    borderRadius: "6px",
+                    width: {
+                      xs: "100%",
+                      sm: "140px",
+                    },
+                    height: "52px",
+                    minWidth: "120px",
+                    marginLeft: "0 !important",
                   }}
                   onClick={handleClose}
                 >
@@ -587,14 +736,33 @@ const SubscriptionPlan = () => {
         </>
       )}
 
+      {/*  Delete Confirmation Dialog */}
+      <DeleteConfirmationPrompt
+        open={deleteDialog.open}
+        onClose={handleDeleteClose}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Subscription Plan"
+        message="Are you sure you want to delete this subscription plan? All of its data will be permanently removed. This action cannot be undone."
+      />
+
       {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        message={snackbar.message}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      />
+      >
+        <Alert
+          severity={snackbar.severity}
+          sx={{
+            width: "100%",
+            fontSize: "clamp(13px, 0.9vw, 15px)",
+            padding: "clamp(8px, 1vh, 12px) clamp(12px, 1.5vw, 16px)",
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

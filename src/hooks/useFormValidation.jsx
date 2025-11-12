@@ -21,7 +21,7 @@ const useFormValidation = (initialValues, validateFn) => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      callback(); // Run your onSubmit logic
+      callback(); // Run onSubmit logic
     }
   };
 

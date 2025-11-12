@@ -10,6 +10,8 @@ import {
 
 const defaultSx = {
   height: "60px",
+  borderRadius: "8px",
+  width: "100%", //  CRITICAL: This makes it fill parent container
   "& .MuiSelect-select": {
     height: "60px",
     display: "flex",
@@ -29,30 +31,27 @@ const defaultSx = {
     boxShadow: "none",
   },
 
-  // base border
   "& .MuiOutlinedInput-notchedOutline": {
     borderColor: "#e5e7eb",
+    borderRadius: "8px",
   },
 
-  // hover
   "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
     borderColor: "#e5e7eb",
   },
 
-  // focused
   "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#012622", // or your theme color
+    borderColor: "#012622",
     borderWidth: "1px",
   },
 
-  // 🚨 error overrides (highest priority)
   "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#d32f2f", // red
+    borderColor: "#d32f2f",
     borderWidth: "1px",
   },
   "& .MuiOutlinedInput-root.Mui-focused.Mui-error .MuiOutlinedInput-notchedOutline":
     {
-      borderColor: "#d32f2f", // keep red even on focus
+      borderColor: "#d32f2f",
     },
 };
 
@@ -68,22 +67,26 @@ const SelectMenuComp = ({
   helperText = "",
   fullWidth = false,
   ...rest
-}) => (
-  <div
-    style={{
-      position: "relative",
-      width: "100%",
-    }}
-    className="w-full"
-  >
+}) => {
+  const mergedSx = {
+    ...defaultSx,
+    ...sx,
+    "& .MuiInputBase-input": {
+      ...defaultSx["& .MuiSelect-select"],
+      ...(sx["& .MuiInputBase-input"] || {}),
+    },
+    "& .MuiInputLabel-root": {
+      ...(sx["& .MuiInputLabel-root"] || {}),
+    },
+  };
+
+  return (
     <FormControl
       variant="outlined"
       sx={{
         height: "60px",
-        width: "100%",
-        maxWidth: { xs: "100%", sm: "334px", lg: "334px", xl: "334px" }, // Responsive: 100% on mobile, 334px on tablet+
+        width: "100%", //  CRITICAL: FormControl fills parent
 
-        // Fixed helper text positioning
         "& .MuiFormHelperText-root": {
           position: "absolute",
           bottom: "-22px",
@@ -94,6 +97,7 @@ const SelectMenuComp = ({
         },
       }}
       error={error}
+      fullWidth={fullWidth}
     >
       <InputLabel
         id={labelId}
@@ -104,6 +108,7 @@ const SelectMenuComp = ({
           color: "#012622 !important",
           "&.Mui-focused": { color: "#012622 !important" },
           "&.MuiInputLabel-shrink": { color: "#012622 !important" },
+          ...(sx["& .MuiInputLabel-root"] || {}),
         }}
       >
         {label}
@@ -114,7 +119,7 @@ const SelectMenuComp = ({
         value={value}
         label={label}
         onChange={onChange}
-        sx={{ ...defaultSx, ...sx }}
+        sx={mergedSx}
         {...rest}
       >
         {options.map((opt) =>
@@ -148,10 +153,9 @@ const SelectMenuComp = ({
         )}
       </Select>
 
-      {/* Always render FormHelperText to reserve space */}
       <FormHelperText>{helperText || " "}</FormHelperText>
     </FormControl>
-  </div>
-);
+  );
+};
 
 export default SelectMenuComp;

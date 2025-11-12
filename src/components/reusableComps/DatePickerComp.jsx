@@ -1,4 +1,3 @@
-// Import necessary libraries and components
 import React from "react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { FormHelperText } from "@mui/material";
@@ -8,19 +7,18 @@ const DatePickerComp = ({
   value,
   onChange,
   placeholder = "Select Date",
-  width = "334px",
+  width = "100%", // Default to 100% for responsiveness
   error = false,
   helperText = "",
   isActive = false,
+  maxWidth = "100%",
   ...props
 }) => {
   return (
     <div
+      className="w-full relative"
       style={{
-        position: "relative",
-        width: width,
-        maxWidth: "100%",
-        // marginBottom: "26px", // reserve space for helper text
+        maxWidth: maxWidth,
       }}
     >
       <DatePicker
@@ -29,12 +27,11 @@ const DatePickerComp = ({
         onChange={onChange}
         slotProps={{
           textField: {
-            error, //  tells TextField it's in error state
-            placeholder: placeholder,
+            error,
+            placeholder,
             sx: {
               width: width,
               height: "60px",
-
               // outlined border
               "& .MuiOutlinedInput-root": {
                 height: "60px !important",
@@ -42,19 +39,16 @@ const DatePickerComp = ({
                   borderColor: "#e5e7eb",
                 },
               },
-
               // hover
               "& .MuiOutlinedInput-root:hover fieldset": {
                 borderColor: "#e5e7eb",
               },
-
               // focused
               "& .MuiOutlinedInput-root.Mui-focused fieldset": {
                 borderColor: "#012622",
                 borderWidth: "1px",
               },
-
-              // 🚨 error border overrides
+              // error border overrides
               "& .MuiOutlinedInput-root.Mui-error fieldset": {
                 borderColor: "#d32f2f",
                 borderWidth: "1px",
@@ -62,8 +56,7 @@ const DatePickerComp = ({
               "& .MuiOutlinedInput-root.Mui-focused.Mui-error fieldset": {
                 borderColor: "#d32f2f",
               },
-
-              //  text style
+              // text style
               "& .MuiPickersInputBase-sectionContent": {
                 fontSize: "14px !important",
                 fontWeight: "400 !important",
@@ -77,8 +70,7 @@ const DatePickerComp = ({
                 fontFamily: "ProximaNova, sans-serif !important",
                 color: "#012622 !important",
               },
-
-              //  label style
+              // label style
               "& .MuiInputLabel-root": {
                 fontSize: "14px !important",
                 fontWeight: "400 !important",
@@ -90,9 +82,8 @@ const DatePickerComp = ({
                 height: "100%",
               },
               "& .MuiInputLabel-root.Mui-error": {
-                color: "#d32f2f !important", //  red label when error
+                color: "#d32f2f !important",
               },
-
               "& .MuiOutlinedInput-root.Mui-focused": {
                 boxShadow: "none !important",
               },

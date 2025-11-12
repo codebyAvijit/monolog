@@ -48,7 +48,7 @@ const TableDataComp = ({
 
   return (
     <div className="w-full">
-      {/* Responsive wrapper with horizontal scroll on mobile */}
+      {/*  Responsive wrapper with horizontal scroll on smaller screens */}
       <div className="overflow-x-auto shadow rounded-lg">
         <table className="min-w-full text-sm border-collapse">
           <thead className="bg-gray-50 text-gray-600">
@@ -67,9 +67,10 @@ const TableDataComp = ({
               ))}
               {actions.length > 0 && (
                 <th
-                  className={`px-3 md:px-4 py-2 md:py-3 text-sm md:text-[16px] font-[400] text-center border-b ${bottomBorderColor} whitespace-nowrap`}
+                  className={`px-3 md:px-4 py-2 md:py-3 text-sm md:text-[16px] font-[400] text-center border-b ${bottomBorderColor} whitespace-nowrap sticky right-0 bg-gray-50`}
+                  style={{ minWidth: "120px" }}
                 >
-                  Actions
+                  {/* Actions */}
                 </th>
               )}
             </tr>
@@ -89,7 +90,11 @@ const TableDataComp = ({
                         showRightBorder && colIndex === 0
                           ? "border-r border-gray-300"
                           : ""
-                      } break-words max-w-xs`}
+                      } break-words`}
+                      style={{
+                        maxWidth: "300px",
+                        minWidth: "120px",
+                      }}
                     >
                       {typeof col.render === "function"
                         ? col.render(row[col.key], row)
@@ -97,11 +102,13 @@ const TableDataComp = ({
                     </td>
                   ))}
 
+                  {/*  Actions Column - Sticky on scroll */}
                   {actions.length > 0 && (
                     <td
-                      className={`px-3 md:px-4 py-2 md:py-3 border-b ${bottomBorderColor}`}
+                      className={`px-3 md:px-4 py-2 md:py-3 border-b ${bottomBorderColor} sticky right-0 bg-white`}
+                      style={{ minWidth: "120px" }}
                     >
-                      <div className="flex justify-center gap-3 md:gap-5 flex-wrap">
+                      <div className="flex justify-center gap-2 md:gap-3 items-center">
                         {actions.map((action, i) => {
                           if (action.render) {
                             return <span key={i}>{action.render(row)}</span>;
@@ -114,7 +121,7 @@ const TableDataComp = ({
                                 action.color
                                   ? action.color
                                   : "text-[rgba(233,138,21,1)] hover:text-black"
-                              } transition-colors`}
+                              } transition-colors flex-shrink-0`}
                               onClick={() => action.onClick?.(row)}
                               title={action.label}
                             >
@@ -125,7 +132,7 @@ const TableDataComp = ({
                                   className="w-4 h-4 md:w-5 md:h-5 object-contain"
                                 />
                               ) : (
-                                <span className="text-xs md:text-sm">
+                                <span className="text-xs md:text-sm whitespace-nowrap">
                                   {action.label}
                                 </span>
                               )}
@@ -151,7 +158,7 @@ const TableDataComp = ({
         </table>
       </div>
 
-      {/* Responsive Pagination */}
+      {/*  Responsive Pagination */}
       <div className="flex justify-center md:justify-end p-2 bg-white rounded-b-lg overflow-x-auto">
         <TablePagination
           component="div"
@@ -174,17 +181,21 @@ const TableDataComp = ({
               minHeight: { xs: "48px", md: "52px" },
               paddingLeft: { xs: "8px", md: "16px" },
               paddingRight: { xs: "8px", md: "16px" },
+              flexWrap: "wrap",
             },
             "& .MuiTablePagination-selectLabel": {
-              fontSize: { xs: "12px", md: "14px" },
+              fontSize: { xs: "11px", sm: "12px", md: "14px" },
               marginBottom: 0,
             },
             "& .MuiTablePagination-displayedRows": {
-              fontSize: { xs: "12px", md: "14px" },
+              fontSize: { xs: "11px", sm: "12px", md: "14px" },
               marginBottom: 0,
             },
             "& .MuiTablePagination-select": {
-              fontSize: { xs: "12px", md: "14px" },
+              fontSize: { xs: "11px", sm: "12px", md: "14px" },
+            },
+            "& .MuiTablePagination-actions": {
+              marginLeft: { xs: "4px", sm: "8px", md: "20px" },
             },
           }}
         />

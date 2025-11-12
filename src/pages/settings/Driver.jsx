@@ -10,6 +10,7 @@ import {
   fetchDriversData,
 } from "../../redux/driverSlice";
 import {
+  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -28,38 +29,40 @@ import ButtonComp from "../../components/reusableComps/ButtonComp";
 import TableDataComp from "../../components/reusableComps/TableDataComp";
 import FormFieldComp from "../../components/reusableComps/FormFieldComp";
 import DatePickerComp from "../../components/reusableComps/DatePickerComp";
+import DeleteConfirmationPrompt from "../../components/reusableComps/DeleteConfirmationPrompt";
 
 const validateAllFields = (values) => {
   return validateFields(values, driverValidationConfig);
 };
 
 const Driver = () => {
-  //REPLACING MAIN PLAN ARRAY WITH REDUX INSTEAD OF LOCAL USESTATE
   const dispatch = useDispatch();
   const { drivers, loading, error } = useSelector((state) => state.driver);
   const [open, setOpen] = useState(false);
   const [filterPostcode, setFilterPostcode] = useState("");
   const [filterVehicleType, setFilterVehicleType] = useState("");
   const [errors, setErrors] = useState({});
-  //SETING UP STATE FOR IMPLEMENTING EDITING FUNCTIONALITY USING REDUX
   const [editingId, setEditingId] = useState("");
-  //useState to view a particular selected row
-  // const [selectedRow, setSelectedRow] = useState(null); // not in use as of now kept optional
-  //use state for view mode
   const [viewMode, setViewMode] = useState(false);
 
-  //  Snackbar state
+  // Delete confirmation dialog state
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    driverId: null,
+  });
+
+  // Snackbar state
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
-    type: "",
+    severity: "success",
   });
 
   useEffect(() => {
     dispatch(fetchDriversData());
   }, [dispatch]);
 
-  //single form state for adding driver
+  // Single form state for adding driver
   const [form, setForm] = useState({
     driverName: "",
     phoneNumber: "",
@@ -75,7 +78,7 @@ const Driver = () => {
     tyresToday: "",
     tyresCurrentWeek: "",
     tyresCurrentMonth: "",
-    planActivationDate: null,
+    licenseExpiryDate: null,
   });
 
   const resetForm = () => ({
@@ -93,7 +96,7 @@ const Driver = () => {
     tyresToday: "",
     tyresCurrentWeek: "",
     tyresCurrentMonth: "",
-    planActivationDate: null,
+    licenseExpiryDate: null,
   });
 
   const handleOpen = () => setOpen(true);
@@ -103,29 +106,22 @@ const Driver = () => {
     setErrors({});
     setForm(resetForm());
     setEditingId("");
-    setViewMode(false); // reset back
+    setViewMode(false);
   };
 
   const handleSnackbarClose = () =>
-    setSnackbar({ open: false, message: "", type: "" });
+    setSnackbar({ open: false, message: "", severity: "success" });
 
-  //changes cleared as soon as user starts typing
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" })); // clear error on input
-    // Run validation for this field only
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+
     const fieldError =
       validateAllFields({ ...form, [name]: value })[name] || "";
     setErrors((prev) => ({ ...prev, [name]: fieldError }));
   };
 
-  //pseudo code
-  // 1. Run validation
-  // 2. If there are errors, show them and stop
-  // 3. If no errors, save data
-  // 4. Close modal and reset form
-  //  Save Handler with Snackbar + Real-time Refresh
   const handleSave = async () => {
     const validationErrors = validateFields(form, driverValidationConfig);
     if (Object.keys(validationErrors).length > 0) {
@@ -139,55 +135,60 @@ const Driver = () => {
         setSnackbar({
           open: true,
           message: "Driver updated successfully",
-          type: "success",
+          severity: "success",
         });
       } else {
-        await dispatch(createDriver(form)).unwrap(); // pass form, thunk will transform it
+        await dispatch(createDriver(form)).unwrap();
         setSnackbar({
           open: true,
           message: "Driver created successfully",
-          type: "success",
+          severity: "success",
         });
       }
 
-      //  Fetch latest drivers after save
       await dispatch(fetchDriversData()).unwrap();
-
       handleClose();
     } catch (err) {
       setSnackbar({
         open: true,
         message: `Error: ${err.message || "Operation failed"}`,
-        type: "error",
+        severity: "error",
       });
     }
   };
 
-  //EDITING
   const handleEdit = (row) => {
     setForm(row);
     setEditingId(row.id);
     setOpen(true);
   };
 
-  //  Delete Handler with Snackbar + Real-time Refresh
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to proceed?")) {
-      try {
-        await dispatch(deleteDriver(id)).unwrap();
-        setSnackbar({
-          open: true,
-          message: "Driver deleted successfully",
-          type: "success",
-        });
-        await dispatch(fetchDriversData()).unwrap();
-      } catch (err) {
-        setSnackbar({
-          open: true,
-          message: `Error: ${err.message || "Deletion failed"}`,
-          type: "error",
-        });
-      }
+  // Open delete confirmation dialog
+  const handleDeleteClick = (id) => {
+    setDeleteDialog({ open: true, driverId: id });
+  };
+
+  // Close delete confirmation dialog
+  const handleDeleteClose = () => {
+    setDeleteDialog({ open: false, driverId: null });
+  };
+
+  // Confirm delete action
+  const handleDeleteConfirm = async () => {
+    try {
+      await dispatch(deleteDriver(deleteDialog.driverId)).unwrap();
+      setSnackbar({
+        open: true,
+        message: "Driver deleted successfully",
+        severity: "info",
+      });
+      await dispatch(fetchDriversData()).unwrap();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: `Error: ${err.message || "Deletion failed"}`,
+        severity: "error",
+      });
     }
   };
 
@@ -209,25 +210,22 @@ const Driver = () => {
     {
       icon: eyeOpen,
       label: "View",
-      // onClick: (row) => console.log("View", row),
       onClick: (row) => {
-        setForm(row); // fill the form with selected row data
-        setViewMode(true); // enable view mode
-        setOpen(true); // open modal
+        setForm(row);
+        setViewMode(true);
+        setOpen(true);
       },
     },
     {
       icon: editIcon,
       label: "Edit",
-      // onClick: (row) => console.log("Edit", row),
       onClick: (row) => handleEdit(row),
     },
     {
       icon: deleteIcon,
       label: "Delete",
       color: "text-red-600 hover:text-red-800",
-      // onClick: (row) => console.log("Delete", row),
-      onClick: (row) => handleDelete(row.id),
+      onClick: (row) => handleDeleteClick(row.id),
     },
   ];
 
@@ -237,52 +235,65 @@ const Driver = () => {
 
   return (
     <>
-      {loading && <div className="text-center p-4">Loading...</div>}
+      {loading && (
+        <div className="text-center p-4 text-sm md:text-base">Loading...</div>
+      )}
       {error && (
-        <div className="text-center p-4 text-red-600">Error: {error}</div>
+        <div className="text-center p-4 text-red-600 text-sm md:text-base">
+          Error: {error}
+        </div>
       )}
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap gap-5 justify-between items-end w-full">
-        {/* Left group: Vehicle Type + Search Bar */}
-        <div className="flex flex-wrap gap-4">
-          <div className="w-full sm:w-[334px]">
-            <SelectMenuComp
-              label="Vehicle Type"
-              name="filterVehicleType"
-              value={filterVehicleType}
-              onChange={(e) => setFilterVehicleType(e.target.value)}
-              options={[
-                { value: "", label: "All" },
-                { value: "Truck", label: "Truck" },
-                { value: "Van", label: "Van" },
-                { value: "Lorry", label: "Lorry" },
-              ]}
-            />
-          </div>
-          <div className="w-full sm:w-[334px]">
-            <SearchBarComp />
-          </div>
-        </div>
+      {/* Filters Section */}
+      <div
+        className="w-full mx-auto container-3xl"
+        style={{ padding: "clamp(16px, 2vw, 25px)" }}
+      >
+        <div className="flex flex-wrap gap-4 items-end justify-between">
+          <div className="w-full sm:w-auto flex flex-wrap gap-4">
+            <div className="w-full sm:w-[283px]">
+              <SelectMenuComp
+                label="Vehicle Type"
+                name="filterVehicleType"
+                value={filterVehicleType}
+                onChange={(e) => setFilterVehicleType(e.target.value)}
+                options={[
+                  { value: "", label: "All" },
+                  { value: "truck", label: "Truck" },
+                  { value: "van", label: "Van" },
+                  { value: "lorry", label: "Lorry" },
+                ]}
+              />
+            </div>
 
-        {/* Right side: Button */}
-        <div className="w-full sm:w-auto">
-          <ButtonComp
-            variant="contained"
-            sx={{
-              fontSize: "16px",
-              borderRadius: "6px",
-              width: { xs: "100%", sm: "154px" },
-            }}
-            onClick={handleOpen}
-          >
-            Add New Driver
-          </ButtonComp>
+            <div className="w-full sm:w-[283px]">
+              <SearchBarComp />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-[194px]">
+            <ButtonComp
+              variant="contained"
+              sx={{
+                width: "100%",
+                height: "60px",
+              }}
+              onClick={handleOpen}
+            >
+              Add New Driver
+            </ButtonComp>
+          </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto shadow rounded-lg mt-5">
+      <div
+        className="overflow-x-auto rounded-lg mx-auto container-3xl"
+        style={{
+          marginTop: "clamp(20px, 2vh, 32px)",
+          padding: "0 clamp(16px, 2vw, 25px)",
+        }}
+      >
         <TableDataComp
           columns={columns}
           data={filteredDrivers}
@@ -290,33 +301,72 @@ const Driver = () => {
         />
       </div>
 
-      {/* Dialog */}
+      {/* Dialog - Updated to Match Figma */}
       <Dialog
         open={open}
         onClose={handleClose}
         disableRestoreFocus
         fullWidth
+        maxWidth="xl"
         slotProps={{
           paper: {
             sx: {
-              maxWidth: "1177px",
-              width: { xs: "95%", sm: "90%", md: "85%", lg: "1177px" },
-              margin: { xs: "8px", sm: "16px" },
-              maxHeight: { xs: "90vh", sm: "85vh" },
-              borderRadius: "12px",
-              p: { xs: 2, sm: 3 },
-              overflowY: "auto",
+              width: {
+                xs: "calc(100% - 32px)",
+                sm: "90%",
+                md: "85%",
+                lg: "clamp(900px, 80vw, 1280px)",
+              },
+              margin: {
+                xs: "16px",
+                sm: "32px auto",
+                md: "40px auto",
+              },
+              borderRadius: {
+                xs: "16px",
+                sm: "20px",
+                md: "22px",
+              },
+              padding: {
+                xs: "16px",
+                sm: "20px",
+                md: "24px",
+              },
+              height: "auto",
+              minHeight: {
+                xs: "300px",
+                sm: "350px",
+              },
+              maxHeight: {
+                xs: "calc(100vh - 32px)",
+                sm: "90vh",
+                md: "85vh",
+              },
+              overflow: "hidden",
             },
           },
         }}
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-description"
       >
         <DialogTitle
-          className="flex flex-row justify-between items-center"
           sx={{
-            fontWeight: "600",
-            fontSize: { xs: "18px", md: "20px", lg: "24px" },
+            fontWeight: "800",
+            fontSize: {
+              xs: "18px",
+              sm: "20px",
+              md: "22px",
+              lg: "24px",
+            },
             color: "#012622",
-            p: { xs: "16px", sm: "20px" },
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: {
+              xs: "16px 16px 12px 16px",
+              sm: "20px 20px 16px 20px",
+              md: "24px 24px 16px 24px",
+            },
           }}
         >
           {viewMode
@@ -328,85 +378,154 @@ const Driver = () => {
             onClick={handleClose}
             sx={{
               color: "#012622",
-              ml: 2,
+              width: {
+                xs: "36px",
+                sm: "40px",
+                md: "44px",
+              },
+              height: {
+                xs: "36px",
+                sm: "40px",
+                md: "44px",
+              },
+              padding: 0,
+              "&:hover": {
+                backgroundColor: "rgba(0, 0, 0, 0.04)",
+              },
             }}
           >
-            <CloseIcon />
+            <CloseIcon
+              sx={{
+                fontSize: {
+                  xs: "20px",
+                  sm: "22px",
+                  md: "24px",
+                },
+              }}
+            />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
-          {/* Grid layout for form */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7 gap-y-7 pt-2">
-            <FormFieldComp
-              placeholder="Driver Name"
-              label="Driver Name"
-              name="driverName"
-              value={form.driverName}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.driverName}
-              helperText={errors.driverName || ""}
-            />
+        <DialogContent
+          sx={{
+            padding: {
+              xs: "16px",
+              sm: "20px",
+              md: "24px 32px",
+            },
+            overflowY: "auto",
+            overflowX: "hidden",
+          }}
+        >
+          {/*  Updated Grid Layout Matching Figma Design */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "20px",
+              width: "100%",
+              marginTop: "5px",
+            }}
+          >
+            {/*  Row 1: Driver Name | Phone Number | Email */}
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="Driver Name"
+                label="Driver Name"
+                name="driverName"
+                value={form.driverName}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.driverName}
+                helperText={errors.driverName || ""}
+                width="100%"
+              />
+            </div>
 
-            <FormFieldComp
-              placeholder="Phone Number"
-              label="Phone Number"
-              name="phoneNumber"
-              value={form.phoneNumber}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.phoneNumber}
-              helperText={errors.phoneNumber || ""}
-            />
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="Phone Number"
+                label="Phone Number"
+                name="phoneNumber"
+                value={form.phoneNumber}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.phoneNumber}
+                helperText={errors.phoneNumber || ""}
+                width="100%"
+              />
+            </div>
 
-            <FormFieldComp
-              placeholder="Email"
-              name="email"
-              label="Email"
-              value={form.email}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.email}
-              helperText={errors.email || ""}
-            />
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="Email"
+                name="email"
+                label="Email"
+                value={form.email}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.email}
+                helperText={errors.email || ""}
+                width="100%"
+              />
+            </div>
 
-            <FormFieldComp
-              placeholder="License Number"
-              label="License Number"
-              name="licenseNumber"
-              value={form.licenseNumber}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.licenseNumber}
-              helperText={errors.licenseNumber || ""}
-            />
+            {/*  Row 2: License Number | License Expiry Date | Postcodes Covered */}
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="License Number"
+                label="License Number"
+                name="licenseNumber"
+                value={form.licenseNumber}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.licenseNumber}
+                helperText={errors.licenseNumber || ""}
+                width="100%"
+              />
+            </div>
 
-            <DatePickerComp
-              label="License Expiry Date"
-              value={
-                form.licenseExpiryDate ? dayjs(form.licenseExpiryDate) : null
-              }
-              onChange={(newValue) =>
-                setForm((prev) => ({
-                  ...prev,
-                  licenseExpiryDate: newValue
-                    ? dayjs(newValue).format("YYYY-MM-DD")
-                    : null,
-                }))
-              }
-              placeholder="Select Expiry Date"
-              width="100%"
-              disabled={viewMode}
-              error={!!errors.licenseExpiryDate}
-              helperText={errors.licenseExpiryDate || ""}
-            />
+            <div style={{ minWidth: 0 }}>
+              <DatePickerComp
+                label="License Expiry Date"
+                value={
+                  form.licenseExpiryDate ? dayjs(form.licenseExpiryDate) : null
+                }
+                onChange={(newValue) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    licenseExpiryDate: newValue
+                      ? dayjs(newValue).format("YYYY-MM-DD")
+                      : null,
+                  }))
+                }
+                placeholder="Select Expiry Date"
+                width="100%"
+                disabled={viewMode}
+                error={!!errors.licenseExpiryDate}
+                helperText={errors.licenseExpiryDate || ""}
+              />
+            </div>
 
-            {/* Empty div for spacing on desktop - keeps 2-column layout */}
-            <div className="hidden lg:block"></div>
+            <div style={{ minWidth: 0 }}>
+              <SelectMenuComp
+                label="Postcodes Covered"
+                name="postCodesCovered"
+                value={form.postCodesCovered}
+                onChange={handleChange}
+                options={[
+                  { value: "SW1", label: "SW1" },
+                  { value: "SW2", label: "SW2" },
+                  { value: "SW3", label: "SW3" },
+                ]}
+                disabled={viewMode}
+                error={!!errors.postCodesCovered}
+                helperText={errors.postCodesCovered || ""}
+              />
+            </div>
 
-            {/* Full-width Address field */}
-            <div className="sm:col-span-2 lg:col-span-3">
+            {/*  Row 3: Address (Full Width) */}
+            <div style={{ minWidth: 0, gridColumn: "1 / -1" }}>
               <FormFieldComp
                 placeholder="Address"
                 label="Address"
@@ -420,65 +539,84 @@ const Driver = () => {
               />
             </div>
 
-            <SelectMenuComp
-              placeholder="Vehicle Type"
-              label="Vehicle Type"
-              name="vehicleType"
-              value={form.vehicleType}
-              onChange={handleChange}
-              options={[
-                { value: "Truck", label: "Truck" },
-                { value: "Van", label: "Van" },
-                { value: "Lorry", label: "Lorry" },
-              ]}
-              disabled={viewMode}
-              error={!!errors.vehicleType}
-              helperText={errors.vehicleType || ""}
-            />
+            {/*  Row 4: Vehicle Type | Vehicle Number | Minimum Tyres Requirement */}
+            <div style={{ minWidth: 0 }}>
+              <SelectMenuComp
+                placeholder="Vehicle Type"
+                label="Vehicle Type"
+                name="vehicleType"
+                value={form.vehicleType}
+                onChange={handleChange}
+                options={[
+                  { value: "truck", label: "Truck" },
+                  { value: "van", label: "Van" },
+                  { value: "lorry", label: "Lorry" },
+                ]}
+                disabled={viewMode}
+                error={!!errors.vehicleType}
+                helperText={errors.vehicleType || ""}
+              />
+            </div>
 
-            <FormFieldComp
-              placeholder="Vehicle Number"
-              name="vehicleNumber"
-              label="Vehicle Number"
-              value={form.vehicleNumber}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.vehicleNumber}
-              helperText={errors.vehicleNumber || ""}
-            />
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="Vehicle Number"
+                name="vehicleNumber"
+                label="Vehicle Number"
+                value={form.vehicleNumber}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.vehicleNumber}
+                helperText={errors.vehicleNumber || ""}
+                width="100%"
+              />
+            </div>
 
-            <FormFieldComp
-              placeholder="Minimum Tyres Requirement"
-              label="Minimum Tyres Requirement"
-              name="minTyresRequirement"
-              value={form.minTyresRequirement}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.minTyresRequirement}
-              helperText={errors.minTyresRequirement || ""}
-            />
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="Minimum Tyres Requirement"
+                label="Minimum Tyres Requirement"
+                name="minTyresRequirement"
+                value={form.minTyresRequirement}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.minTyresRequirement}
+                helperText={errors.minTyresRequirement || ""}
+                width="100%"
+              />
+            </div>
 
-            <FormFieldComp
-              placeholder="Maximum Tyres Capacity"
-              label="Maximum Tyres Capacity"
-              name="maxTyresCapacity"
-              value={form.maxTyresCapacity}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.maxTyresCapacity}
-              helperText={errors.maxTyresCapacity || ""}
-            />
+            {/*  Row 5: Maximum Tyres Capacity | Maximum Weight (2 columns only) */}
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="Maximum Tyres Capacity"
+                label="Maximum Tyres Capacity"
+                name="maxTyresCapacity"
+                value={form.maxTyresCapacity}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.maxTyresCapacity}
+                helperText={errors.maxTyresCapacity || ""}
+                width="100%"
+              />
+            </div>
 
-            <FormFieldComp
-              placeholder="Maximum Weight (Kg)"
-              label="Maximum Weight (Kg)"
-              name="maxWeight"
-              value={form.maxWeight}
-              onChange={handleChange}
-              disabled={viewMode}
-              error={!!errors.maxWeight}
-              helperText={errors.maxWeight || ""}
-            />
+            <div style={{ minWidth: 0 }}>
+              <FormFieldComp
+                placeholder="Maximum Weight (Kg)"
+                label="Maximum Weight (Kg)"
+                name="maxWeight"
+                value={form.maxWeight}
+                onChange={handleChange}
+                disabled={viewMode}
+                error={!!errors.maxWeight}
+                helperText={errors.maxWeight || ""}
+                width="100%"
+              />
+            </div>
+
+            {/*  Empty third column for proper grid alignment */}
+            <div style={{ minWidth: 0 }}></div>
           </div>
         </DialogContent>
 
@@ -486,18 +624,29 @@ const Driver = () => {
           <DialogActions
             sx={{
               justifyContent: "center",
-              gap: { xs: 2, sm: 3 },
-              pb: { xs: 2, sm: 3 },
-              px: { xs: 2, sm: 3 },
+              gap: "12px",
+              paddingBottom: {
+                xs: "16px",
+                sm: "20px",
+                md: "24px",
+              },
+              paddingX: {
+                xs: "16px",
+                sm: "20px",
+                md: "24px",
+              },
+              flexWrap: "wrap",
             }}
           >
             <ButtonComp
               variant="contained"
               sx={{
-                width: { xs: "100px", sm: "120px" },
-                height: { xs: "45px", sm: "50px" },
-                fontSize: { xs: "14px", sm: "16px" },
-                borderRadius: "6px",
+                width: {
+                  xs: "100%",
+                  sm: "140px",
+                },
+                height: "52px",
+                minWidth: "120px",
               }}
               onClick={handleSave}
             >
@@ -506,10 +655,13 @@ const Driver = () => {
             <ButtonComp
               variant="outlined"
               sx={{
-                width: { xs: "100px", sm: "120px" },
-                height: { xs: "45px", sm: "50px" },
-                fontSize: { xs: "14px", sm: "16px" },
-                borderRadius: "6px",
+                width: {
+                  xs: "100%",
+                  sm: "140px",
+                },
+                height: "52px",
+                minWidth: "120px",
+                marginLeft: "0 !important",
               }}
               onClick={handleClose}
             >
@@ -519,22 +671,33 @@ const Driver = () => {
         )}
       </Dialog>
 
-      {/*  Snackbar */}
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationPrompt
+        open={deleteDialog.open}
+        onClose={handleDeleteClose}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Driver"
+        message="Are you sure you want to delete this driver? All of their data will be permanently removed. This action cannot be undone."
+      />
+
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        message={snackbar.message}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        ContentProps={{
-          sx: {
-            backgroundColor:
-              snackbar.type === "success" ? "#2E7D32" : "#D32F2F",
-            color: "#fff",
-            fontWeight: 600,
-          },
-        }}
-      />
+      >
+        <Alert
+          severity={snackbar.severity}
+          sx={{
+            width: "100%",
+            fontSize: "clamp(13px, 0.9vw, 15px)",
+            padding: "clamp(8px, 1vh, 12px) clamp(12px, 1.5vw, 16px)",
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

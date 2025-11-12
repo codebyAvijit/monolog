@@ -106,9 +106,9 @@ const SearchWithDropDown = ({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-[334px] z-[1300]">
+    <div ref={containerRef} className="relative w-full z-[1300]">
       <div
-        className={`flex items-center border rounded-md bg-white px-3 py-2 h-[60px] transition-all ${
+        className={`flex items-center border rounded-md bg-white sm:w-full px-3 py-2 h-[60px] transition-all ${
           error
             ? "border-[#d32f2f]"
             : "border-gray-300 focus-within:border-gray-500"

@@ -1,4 +1,4 @@
-// Import necessary libraries and components
+// src/components/ButtonComp.jsx
 import React from "react";
 import { Button } from "@mui/material";
 
@@ -22,7 +22,12 @@ const ButtonComp = ({
         height: "60px",
         padding: "0 20px",
         whiteSpace: "nowrap",
-        ...sx, // sx can override any of the above for full flexibility
+        borderColor: variant === "outlined" ? "#012622" : undefined,
+        "&:hover": {
+          borderColor: variant === "outlined" ? "#012622" : undefined,
+          backgroundColor: variant === "contained" ? "#0a3a34" : "transparent",
+        },
+        ...sx, // sx can override any of the above
       }}
       onClick={onClick}
       {...rest}

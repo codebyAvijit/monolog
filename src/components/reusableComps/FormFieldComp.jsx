@@ -1,4 +1,3 @@
-// Import necessary libraries and components
 // src/components/reusableComps/FormFieldComp.jsx
 import React from "react";
 import { TextField } from "@mui/material";
@@ -6,8 +5,10 @@ import { TextField } from "@mui/material";
 const inputBoxSX = {
   "& .MuiOutlinedInput-root": {
     height: "60px",
+    borderRadius: "8px", //  Consistent border radius
     "& fieldset": {
       borderColor: "#e5e7eb",
+      borderRadius: "8px", //  Consistent border radius
     },
     "&:hover fieldset": {
       borderColor: "rgba(0, 0, 0, 0.2)",
@@ -47,19 +48,20 @@ const inputBoxSX = {
     },
   },
 
-  // Fixed helper text area to prevent shifting
+  // Fixed helper text area
   "& .MuiFormHelperText-root": {
     position: "absolute",
-    bottom: "-22px", // Position helper text below the input
+    bottom: "-22px",
     left: "0px",
     margin: "0",
     fontSize: "12px",
-    minHeight: "16px", // Reserve space for helper text
+    minHeight: "16px",
   },
 };
 
 const FormFieldComp = ({
   placeholder,
+  label,
   name,
   value,
   onChange,
@@ -68,8 +70,29 @@ const FormFieldComp = ({
   fullWidth = false,
   width = "334px",
   height = "60px",
+  sx = {},
   ...rest
 }) => {
+  //  Merge sx properly
+  const mergedSx = {
+    ...inputBoxSX,
+    ...sx,
+    "& .MuiOutlinedInput-root": {
+      ...inputBoxSX["& .MuiOutlinedInput-root"],
+      ...(sx["& .MuiOutlinedInput-root"] || {}),
+    },
+    "& .MuiOutlinedInput-input": {
+      ...inputBoxSX["& .MuiOutlinedInput-input"],
+      ...(sx["& .MuiOutlinedInput-input"] || {}),
+    },
+    "& .MuiInputLabel-root": {
+      ...inputBoxSX["& .MuiInputLabel-root"],
+      ...(sx["& .MuiInputLabel-root"] || {}),
+    },
+    width: "100%",
+    height: "60px !important",
+  };
+
   return (
     <div
       style={{
@@ -77,11 +100,11 @@ const FormFieldComp = ({
         width: fullWidth ? "100%" : "100%",
         maxWidth: fullWidth ? "none" : width,
         height: "60px",
-        // marginBottom: "26px", // Space for helper text + some padding
       }}
       className="w-full"
     >
       <TextField
+        label={label}
         placeholder={placeholder}
         name={name}
         required
@@ -89,13 +112,8 @@ const FormFieldComp = ({
         onChange={onChange}
         fullWidth={fullWidth}
         error={Boolean(error)}
-        helperText={helperText || " "} // Always provide space for helper text
-        sx={{
-          ...inputBoxSX,
-          ...rest.sx,
-          width: "100%",
-          height: "60px !important",
-        }}
+        helperText={helperText || " "}
+        sx={mergedSx}
         {...rest}
       />
     </div>

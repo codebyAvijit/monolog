@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://172.16.16.128:8000",
+        target: "http://172.16.16.123:8080",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "/admin"),
         secure: false, // Set to false for HTTP or self-signed HTTPS

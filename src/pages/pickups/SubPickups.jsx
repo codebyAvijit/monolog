@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPickupsData } from "../../redux/pickupSlice";
+
 import SelectMenuComp from "../../components/reusableComps/SelectMenuComp";
 import SearchBarComp from "../../components/reusableComps/SearchBarComp";
 import TableDataComp from "../../components/reusableComps/TableDataComp";
 import eyeOpen from "../../assets/icons/eyeOpen.svg";
-
 import {
   Dialog,
   DialogActions,
@@ -14,14 +16,12 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import ButtonComp from "../../components/reusableComps/ButtonComp";
 import { DateRangePicker } from "rsuite";
-// importing rsuite styles
 import "rsuite/dist/rsuite-no-reset.min.css";
 import "./dateRangePicker.css";
 import { NavLink } from "react-router-dom";
 
 const pdfURL =
   "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf";
-
 const wtnURL =
   "https://www.scribd.com/document/842007375/WTN-Waste-Transfer-Note-En-Updated";
 
@@ -31,8 +31,14 @@ const SubPickups = () => {
   const [filterStatusType, setFilterStatusType] = useState("");
   const [filterRequestType, setFilterRequestType] = useState("");
   const [filterStoreType, setFilterStoreType] = useState("");
-
   const [selectedRow, setSelectedRow] = useState(null);
+
+  const dispatch = useDispatch();
+  const { pickups, loading, error } = useSelector((state) => state.pickup);
+
+  useEffect(() => {
+    dispatch(fetchPickupsData({ page: 1, pageSize: 10 }));
+  }, [dispatch]);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
@@ -41,37 +47,21 @@ const SubPickups = () => {
   };
 
   const columns = [
-    {
-      key: "requestId",
-      label: "Request Id",
-    },
-    {
-      key: "pickupLocation",
-      label: "Pick-up Location",
-    },
-    {
-      key: "numberOfTyres",
-      label: "No Of Tyres",
-    },
-    {
-      key: "pickupDate",
-      label: "Pickup Date",
-    },
+    { key: "requestId", label: "Request Id" },
+    { key: "pickupLocation", label: "Pick-up Location" },
+    { key: "numberOfTyres", label: "No Of Tyres" },
+    { key: "pickupDate", label: "Pickup Date" },
+    { key: "requestType", label: "Request Type" },
     {
       key: "status",
       label: "Status",
       render: (val, row) => {
         const displayVal = val ?? "N/A";
         let classes = "";
-
-        if (displayVal === "Requested") {
-          classes = "bg-gray-200 text-black";
-        } else if (displayVal === "Completed") {
+        if (displayVal === "Requested") classes = "bg-gray-200 text-black";
+        else if (displayVal === "Completed")
           classes = "bg-green-100 text-green-700";
-        } else {
-          classes = "bg-sky-100 text-sky-700";
-        }
-
+        else classes = "bg-sky-100 text-sky-700";
         return (
           <span
             className={`inline-block px-2 py-1 text-center text-xs md:text-sm font-[700] min-w-[80px] md:min-w-[95px] h-[28px] md:h-[30px] rounded-[30px] ${classes}`}
@@ -83,42 +73,39 @@ const SubPickups = () => {
     },
     {
       label: "View Invoice",
-      render: (el, row) => {
-        if (row?.status === "Completed") {
-          return (
-            <NavLink
-              to={pdfURL}
-              target="_blank"
-              state={{ row }}
-              className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
-            >
-              View Invoice
-            </NavLink>
-          );
-        }
-        return <span className="text-gray-400">-</span>;
-      },
+      render: (el, row) =>
+        row?.status?.toLowerCase() === "completed" && row?.invoiceFilePath ? (
+          <NavLink
+            to={row.invoiceFilePath}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
+          >
+            View Invoice
+          </NavLink>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
     },
     {
       label: "View WTN",
-      render: (el, row) => {
-        if (row?.status === "Completed") {
-          return (
-            <NavLink
-              to={wtnURL}
-              target="_blank"
-              state={{ row }}
-              className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
-            >
-              View WTN
-            </NavLink>
-          );
-        }
-        return <span className="text-gray-400">-</span>;
-      },
+      render: (el, row) =>
+        row?.status?.toLowerCase() === "completed" && row?.wtnFilePath ? (
+          <NavLink
+            to={row.wtnFilePath}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
+          >
+            View WTN
+          </NavLink>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
     },
   ];
 
+  // Dummy data
   const data = [
     {
       requestId: "REQ-1001",
@@ -179,90 +166,98 @@ const SubPickups = () => {
   return (
     <>
       {/* Filters Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
-        <div className="my-rsuite">
-          <DateRangePicker
-            placeholder=":"
-            className="custom-date-range"
-            format="dd/MM/yyyy"
-            showOneCalendar
-            style={{ width: "100%", height: 60 }}
-            label="Select Date"
+      <div
+        className="w-full mx-auto max-w-[1800px] px-4 md:px-8"
+        style={{ marginTop: "clamp(24px, 2vh, 36px)" }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
+          <div className="my-rsuite w-[100%]">
+            <DateRangePicker
+              placeholder=":"
+              className="custom-date-range"
+              format="dd/MM/yyyy"
+              showOneCalendar
+              style={{ width: "100%", height: 60 }}
+              label="Select Date"
+            />
+          </div>
+          <SelectMenuComp
+            label="Status"
+            name="filterStatusType"
+            value={filterStatusType}
+            onChange={(e) => setFilterStatusType(e.target.value)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "arrived", label: "Arrived" },
+              { value: "enroute", label: "En-route" },
+              { value: "scheduled", label: "Scheduled" },
+              { value: "completed", label: "Completed" },
+            ]}
           />
+          <SelectMenuComp
+            label="Request Type"
+            name="filterRequestType"
+            value={filterRequestType}
+            onChange={(e) => setFilterRequestType(e.target.value)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "standard", label: "Standard" },
+              { value: "adhoc", label: "Ad-hoc" },
+              { value: "express", label: "Express" },
+            ]}
+          />
+          <SelectMenuComp
+            label="Store"
+            name="filterStoreType"
+            value={filterStoreType}
+            onChange={(e) => setFilterStoreType(e.target.value)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "emily", label: "Emily" },
+              { value: "raj", label: "Raj" },
+              { value: "sarah", label: "Sarah" },
+            ]}
+          />
+          <SearchBarComp />
         </div>
-
-        <SelectMenuComp
-          label="Status"
-          name="filterStatusType"
-          value={filterStatusType}
-          onChange={(e) => setFilterStatusType(e.target.value)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "arrived", label: "Arrived" },
-            { value: "enroute", label: "En-route" },
-            { value: "scheduled", label: "Scheduled" },
-            { value: "completed", label: "Completed" },
-          ]}
-        />
-
-        <SelectMenuComp
-          label="Request Type"
-          name="filterRequestType"
-          value={filterRequestType}
-          onChange={(e) => setFilterRequestType(e.target.value)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "standard", label: "Standard" },
-            { value: "adhoc", label: "Ad-hoc" },
-            { value: "express", label: "Express" },
-          ]}
-        />
-
-        <SelectMenuComp
-          label="Store"
-          name="filterStoreType"
-          value={filterStoreType}
-          onChange={(e) => setFilterStoreType(e.target.value)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "emily", label: "Emily" },
-            { value: "raj", label: "Raj" },
-            { value: "sarah", label: "Sarah" },
-          ]}
-        />
-
-        <SearchBarComp />
       </div>
 
       {/* Table */}
-      <div className="mt-5">
-        <TableDataComp columns={columns} data={data} actions={actions} />
+      <div
+        className="overflow-x-auto rounded-lg mx-auto max-w-[1800px] px-4 md:px-8"
+        style={{ marginTop: "clamp(20px, 2vh, 32px)" }}
+      >
+        <TableDataComp
+          columns={columns}
+          data={pickups}
+          actions={actions}
+          loading={loading}
+        />
       </div>
 
       {/* View Dialog */}
       <Dialog
+        disableRestoreFocus
         open={open}
         onClose={handleClose}
         fullWidth
-        disableRestoreFocus
         maxWidth="lg"
         slotProps={{
           paper: {
             sx: {
-              width: { xs: "95%", sm: "90%", md: "85%" },
-              maxWidth: "1100px",
-              margin: { xs: "8px", sm: "16px" },
+              width: { xs: "95%", sm: "90%", md: "clamp(820px, 65vw, 1100px)" },
+              margin: { xs: "12px", sm: "24px auto" },
+              borderRadius: "14px",
               maxHeight: { xs: "90vh", sm: "85vh" },
-              borderRadius: "12px",
               overflowY: "auto",
+              overflowX: "hidden",
             },
           },
         }}
       >
-        {/* Title */}
         <DialogTitle
           sx={{
-            fontWeight: "600",
+            fontWeight: 700,
             fontSize: { xs: "16px", md: "18px", lg: "20px" },
             color: "#012622",
             display: "flex",
@@ -274,7 +269,6 @@ const SubPickups = () => {
             gap: 2,
           }}
         >
-          {/* Heading + Status pill */}
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm md:text-base lg:text-lg">
               Pick-up Details - {selectedRow?.requestId}
@@ -293,8 +287,6 @@ const SubPickups = () => {
               </span>
             )}
           </div>
-
-          {/* Close button */}
           <IconButton
             onClick={handleClose}
             sx={{
@@ -305,44 +297,35 @@ const SubPickups = () => {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-
-        {/* Content */}
-        <DialogContent
-          sx={{
-            p: { xs: 2, sm: 3 },
-            mt: 2,
-          }}
-        >
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, mt: 2 }}>
           {viewMode && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {[
-                { label: "Request ID", value: "1001" },
+                { label: "Request ID", value: selectedRow?.requestId || "" },
                 {
                   label: "Pick-up Location",
-                  value: "47 Baker Street, London, W1U 8ED",
+                  value: selectedRow?.pickupLocation || "",
                 },
-                { label: "Number of Tyres", value: "40" },
-                { label: "Pick-up Date", value: "05/09/2025" },
+                {
+                  label: "Number of Tyres",
+                  value: selectedRow?.numberOfTyres || "",
+                },
+                { label: "Pick-up Date", value: selectedRow?.pickupDate || "" },
                 {
                   label: "Request Type",
-                  value: "Express",
+                  value: selectedRow?.requestType || "",
                 },
-                {
-                  label: "Driver Name",
-                  value: "John Smith",
-                },
-                {
-                  label: "Vehicle Number",
-                  value: "PZ65 ABC",
-                },
+                { label: "Driver Name", value: "John Smith" },
+                { label: "Vehicle Number", value: "PZ65 ABC" },
                 {
                   label: "Invoice",
                   value:
-                    selectedRow?.status === "Completed" ? (
+                    selectedRow?.status?.toLowerCase() === "completed" &&
+                    selectedRow?.invoiceFilePath ? (
                       <NavLink
-                        to={pdfURL}
+                        to={selectedRow.invoiceFilePath}
                         target="_blank"
-                        state={{ row: selectedRow }}
+                        rel="noopener noreferrer"
                         className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
                       >
                         View Invoice
@@ -354,11 +337,12 @@ const SubPickups = () => {
                 {
                   label: "WTN",
                   value:
-                    selectedRow?.status === "Completed" ? (
+                    selectedRow?.status?.toLowerCase() === "completed" &&
+                    selectedRow?.wtnFilePath ? (
                       <NavLink
-                        to={wtnURL}
+                        to={selectedRow.wtnFilePath}
                         target="_blank"
-                        state={{ row: selectedRow }}
+                        rel="noopener noreferrer"
                         className="text-[rgba(233,138,21,1)] hover:text-black underline text-xs md:text-sm"
                       >
                         View WTN
@@ -368,7 +352,7 @@ const SubPickups = () => {
                     ),
                 },
               ].map((item, i) => (
-                <div key={i}>
+                <div key={i} className="min-w-0">
                   <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">
                     {item.label}
                   </p>
@@ -381,7 +365,6 @@ const SubPickups = () => {
           )}
         </DialogContent>
 
-        {/* Close Button */}
         <DialogActions
           sx={{
             justifyContent: "center",

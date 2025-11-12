@@ -1,5 +1,5 @@
+// src/redux/postCodeSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import {
   loadFromLocalStorage,
   saveToLocalStorage,
@@ -17,7 +17,8 @@ const initialState = {
   originalPostCodes: [],
 };
 
-// Fetch All Postcodes
+// ==================== API THUNKS (Keep as is) ====================
+
 export const fetchPostCodesData = createAsyncThunk(
   "postCode/fetchPostCodes",
   async (_, { rejectWithValue }) => {
@@ -32,14 +33,13 @@ export const fetchPostCodesData = createAsyncThunk(
   }
 );
 
-// Fetch Default Postcodes (First 4)
 export const fetchDefaultPostCodes = createAsyncThunk(
   "postCode/fetchDefaultPostCodes",
   async (_, { rejectWithValue }) => {
     try {
       const response = await GetData("/postcodes?limit=4");
       const data = response.data.items || response.data || [];
-      return data.slice(0, 4); // Ensure only 4 items
+      return data.slice(0, 4);
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Failed to fetch default postcodes"
@@ -48,7 +48,6 @@ export const fetchDefaultPostCodes = createAsyncThunk(
   }
 );
 
-//  Create New Postcode
 export const createPostCode = createAsyncThunk(
   "postCode/createPostCode",
   async (postCodeData, { rejectWithValue }) => {
@@ -67,7 +66,6 @@ export const createPostCode = createAsyncThunk(
   }
 );
 
-//  Update Postcode
 export const updatePostCode = createAsyncThunk(
   "postCode/updatePostCode",
   async ({ id, postCodeLocation, locationName }, { rejectWithValue }) => {
@@ -91,7 +89,6 @@ export const updatePostCode = createAsyncThunk(
   }
 );
 
-// Delete Postcode
 export const deletePostCode = createAsyncThunk(
   "postCode/deletePostCode",
   async (id, { rejectWithValue }) => {
@@ -106,15 +103,11 @@ export const deletePostCode = createAsyncThunk(
   }
 );
 
-// Search Postcodes
-
 export const searchPostCodes = createAsyncThunk(
   "postCode/searchPostCodes",
   async ({ query, signal }, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/api/postcodes/search?q=${query}`, {
-        signal,
-      });
+      const response = await GetData(`/postcodes/search?q=${query || ""}`);
 
       if (Array.isArray(response.data)) return response.data;
       if (Array.isArray(response.data.items)) return response.data.items;
@@ -129,13 +122,15 @@ export const searchPostCodes = createAsyncThunk(
   }
 );
 
+// ==================== REDUCER ====================
+
 const postCodeSlice = createSlice({
   name: "postCode",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch All
+      // ========== FETCH ALL ==========
       .addCase(fetchPostCodesData.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -149,14 +144,14 @@ const postCodeSlice = createSlice({
         }));
         state.postCodes = formatted;
         state.originalPostCodes = formatted;
-        saveToLocalStorage(STORAGE_KEY, state.postCodes);
+        saveToLocalStorage(STORAGE_KEY, formatted);
       })
       .addCase(fetchPostCodesData.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
-      // Fetch Default (4 postcodes)
+      // ========== FETCH DEFAULT ==========
       .addCase(fetchDefaultPostCodes.pending, (state) => {
         state.loading = true;
       })
@@ -174,51 +169,98 @@ const postCodeSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Create
+      // ========== CREATE (Real-time) ==========
+      .addCase(createPostCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(createPostCode.fulfilled, (state, action) => {
+        state.loading = false;
+
+        //  Match SubPlan pattern
+        const createdData = action.payload.data || action.payload;
         const newPostCode = {
-          id: action.payload.id,
-          postCodeLocation: action.payload.postal_code,
-          locationName: action.payload.location_name,
+          id: createdData.id,
+          postCodeLocation: createdData.postal_code,
+          locationName: createdData.location_name,
         };
-        state.postCodes.push(newPostCode);
-        state.originalPostCodes.push(newPostCode);
+
+        state.postCodes = [...state.postCodes, newPostCode];
+        state.originalPostCodes = [...state.originalPostCodes, newPostCode];
         saveToLocalStorage(STORAGE_KEY, state.postCodes);
       })
+      .addCase(createPostCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
-      // Update
+      // ========== UPDATE (Real-time - FIXED TO MATCH SUBPLAN) ==========
+      .addCase(updatePostCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updatePostCode.fulfilled, (state, action) => {
-        const updateItem = (arr) => {
-          const index = arr.findIndex((i) => i.id === action.payload.id);
-          if (index !== -1) {
-            arr[index] = {
-              id: action.payload.id,
-              postCodeLocation: action.payload.postal_code,
-              locationName: action.payload.location_name,
-            };
+        state.loading = false;
+
+        //  EXACT SubPlan pattern - direct mutation with findIndex
+        const updatedData = action.payload.data || action.payload;
+        const index = state.postCodes.findIndex((p) => p.id === updatedData.id);
+
+        if (index !== -1) {
+          const updatedPostCode = {
+            id: updatedData.id,
+            postCodeLocation: updatedData.postal_code,
+            locationName: updatedData.location_name,
+          };
+
+          //  Direct mutation (Immer handles it properly)
+          state.postCodes[index] = updatedPostCode;
+
+          // Update originalPostCodes too
+          const origIndex = state.originalPostCodes.findIndex(
+            (p) => p.id === updatedData.id
+          );
+          if (origIndex !== -1) {
+            state.originalPostCodes[origIndex] = updatedPostCode;
           }
-        };
-        updateItem(state.postCodes);
-        updateItem(state.originalPostCodes);
-        saveToLocalStorage(STORAGE_KEY, state.postCodes);
+
+          saveToLocalStorage(STORAGE_KEY, state.postCodes);
+        }
+      })
+      .addCase(updatePostCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
-      // Delete
+      // ========== DELETE (Real-time) ==========
+      .addCase(deletePostCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(deletePostCode.fulfilled, (state, action) => {
-        const filterOut = (arr) => arr.filter((i) => i.id !== action.payload);
-        state.postCodes = filterOut(state.postCodes);
-        state.originalPostCodes = filterOut(state.originalPostCodes);
+        state.loading = false;
+
+        state.postCodes = state.postCodes.filter(
+          (item) => item.id !== action.payload
+        );
+        state.originalPostCodes = state.originalPostCodes.filter(
+          (item) => item.id !== action.payload
+        );
+
         saveToLocalStorage(STORAGE_KEY, state.postCodes);
       })
+      .addCase(deletePostCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
-      // Search
+      // ========== SEARCH ==========
       .addCase(searchPostCodes.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(searchPostCodes.fulfilled, (state, action) => {
         state.loading = false;
-        // Keep the raw format for search results
         state.searchResults = action.payload;
       })
       .addCase(searchPostCodes.rejected, (state, action) => {

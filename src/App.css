@@ -1,6 +1,38 @@
+/* src/index.css */
 @import "tailwindcss";
 
-/* Proxima Nova Black */
+/* Root variables for fluid scaling */
+:root {
+  --fluid-font-sm: clamp(0.875rem, 0.9vw, 1rem);
+  --fluid-font-base: clamp(1rem, 1vw, 1.25rem);
+  --fluid-font-lg: clamp(1.125rem, 1.2vw, 1.5rem);
+}
+
+/* Add simple custom utilities */
+@layer utilities {
+  .text-fluid-sm {
+    font-size: var(--fluid-font-sm);
+  }
+
+  .text-fluid-base {
+    font-size: var(--fluid-font-base);
+  }
+
+  .text-fluid-lg {
+    font-size: var(--fluid-font-lg);
+  }
+
+  /* Large monitor max-widths */
+  .container-3xl {
+    max-width: 1920px;
+  }
+
+  .container-4xl {
+    max-width: 2560px;
+  }
+}
+
+/* Your font-faces here */
 @font-face {
   font-family: "ProximaNova";
   src: url("/fonts/proximanova/ProximaNova-Black.woff2") format("woff2"),
@@ -9,7 +41,6 @@
   font-style: normal;
 }
 
-/* Proxima Nova Black Italic */
 @font-face {
   font-family: "ProximaNova";
   src: url("/fonts/proximanova/ProximaNova-BlackIt.woff2") format("woff2"),
@@ -18,7 +49,6 @@
   font-style: italic;
 }
 
-/* Proxima Nova Bold */
 @font-face {
   font-family: "ProximaNova";
   src: url("/fonts/proximanova/ProximaNova-Bold.woff2") format("woff2"),
@@ -27,7 +57,6 @@
   font-style: normal;
 }
 
-/* Proxima Nova Bold Italic */
 @font-face {
   font-family: "ProximaNova";
   src: url("/fonts/proximanova/ProximaNova-BoldIt.woff2") format("woff2"),
@@ -36,7 +65,6 @@
   font-style: italic;
 }
 
-/* Proxima Nova ExtraBold */
 @font-face {
   font-family: "ProximaNova";
   src: url("/fonts/proximanova/ProximaNova-ExtraBold.woff2") format("woff2"),
@@ -45,7 +73,6 @@
   font-style: normal;
 }
 
-/* Proxima Nova Light */
 @font-face {
   font-family: "ProximaNova";
   src: url("/fonts/proximanova/ProximaNova-Light.woff2") format("woff2"),
@@ -54,7 +81,6 @@
   font-style: normal;
 }
 
-/* Proxima Nova Regular */
 @font-face {
   font-family: "ProximaNova";
   src: url("/fonts/proximanova/ProximaNova-Regular.woff2") format("woff2"),
@@ -63,7 +89,6 @@
   font-style: normal;
 }
 
-/* Default font for everything */
 * {
   font-family: "ProximaNova", sans-serif;
 }

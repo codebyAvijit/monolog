@@ -1,38 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import TableDataComp from "./TableDataComp";
 import infoIcon from "../../assets/icons/info.svg";
 import searchIcon from "../../assets/icons/search.svg";
 
-const DriverTableDataComp = ({ requests = [], actions = [] }) => {
+const DriverTableDataComp = ({
+  drivers = [],     // array of driver metadata objects
+  pickups = [],     // array of all pickup requests
+  actions = [],
+  selectedDriverId,
+  setSelectedDriverId,
+  driverAssignments,
+  setDriverAssignments,
+}) => {
   const [search, setSearch] = useState("");
   const [expandedRow, setExpandedRow] = useState(null);
-  const [selectedDriverId, setSelectedDriverId] = useState(null);
-  const [driverAssignments, setDriverAssignments] = useState({});
 
+  // Tooltip toggle
   const handleInfoClick = (rowId) => {
     setExpandedRow((prev) => (prev === rowId ? null : rowId));
   };
 
-  // Group drivers
-  const groupedDrivers = requests.reduce((acc, request) => {
-    if (!acc[request.driverId]) {
-      acc[request.driverId] = {
-        driverId: request.driverId,
-        driverName: request.driverName,
-        vehicleName: request.vehicleName,
-        maxCapacity: request.maxCapacity,
-        selectedTyres: request.selectedTyres,
-      };
-    }
-    return acc;
-  }, {});
-
-  const drivers = Object.values(groupedDrivers).filter((driver) =>
-    driver.driverName.toLowerCase().includes(search.toLowerCase())
+  // Filter drivers by search term
+  const filteredDrivers = useMemo(
+    () =>
+      drivers
+        .filter((d) =>
+          (d.driverName || "")
+            .toString()
+            .toLowerCase()
+            .includes(search.toLowerCase())
+        )
+        .map((d) => ({
+          driverId: d.driverId,
+          driverName: d.driverName,
+          vehicleName: d.vehicleName,
+          maxCapacity: d.maxCapacity,
+          selectedTyres: d.selectedTyres || 0,
+        })),
+    [drivers, search]
   );
 
-  // Check if any driver is selected
-  const isAnyDriverSelected = selectedDriverId !== null;
+  // Toggle radio selection (click again to unselect)
+  const handleRadioToggle = (driverId) => {
+    setSelectedDriverId((prev) => (prev === driverId ? null : driverId));
+  };
 
   const columns = [
     {
@@ -46,7 +57,7 @@ const DriverTableDataComp = ({ requests = [], actions = [] }) => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <img src={searchIcon} alt="search" className="w-4 h-4" />
+          <img src={searchIcon} alt="search" className="w-4 h-4 ml-2" />
         </div>
       ),
       render: (_, row) => (
@@ -55,11 +66,13 @@ const DriverTableDataComp = ({ requests = [], actions = [] }) => {
             type="radio"
             name="selectedDriver"
             checked={selectedDriverId === row.driverId}
-            onChange={() => setSelectedDriverId(row.driverId)}
-            className="accent-black w-5 h-5"
+            onClick={() => handleRadioToggle(row.driverId)}
+            readOnly
+            className="accent-black w-5 h-5 cursor-pointer"
           />
           <span className="font-medium">{row.driverName}</span>
 
+          {/* Info Tooltip */}
           <div className="relative ml-2">
             <button
               onMouseOver={() => handleInfoClick(row.driverId)}
@@ -70,7 +83,7 @@ const DriverTableDataComp = ({ requests = [], actions = [] }) => {
 
             {expandedRow === row.driverId && (
               <div
-                className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 border rounded-md w-[225px] p-2 bg-[#414650] shadow-lg z-50 text-[14px] flex flex-col text-center
+                className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 border rounded-md w-[225px] p-2 bg-[#414650] shadow-lg z-50 text-[13px] flex flex-col text-center
                before:content-[''] before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 
                before:border-8 before:border-transparent before:border-t-[#414650]"
               >
@@ -89,53 +102,76 @@ const DriverTableDataComp = ({ requests = [], actions = [] }) => {
         </div>
       ),
     },
+
+    //  Request IDs column
     {
       key: "requestId",
       label: "Request ID",
       render: (_, row) => {
-        // Get all requests for this specific driver
-        const driverRequests = requests.filter(
-          (req) => req.driverId === row.driverId
+        // driverRequests — include pickups that already belong to this driver
+        // and include unassigned pickups (no driverId) so user can assign them
+        const driverRequests = pickups.filter(
+          (p) =>
+            (p.driverId && p.driverId.toLowerCase() === row.driverId.toLowerCase()) ||
+            (!p.driverId || p.driverId === null || p.driverId === undefined)
         );
+
+        if (!selectedDriverId)
+          return (
+            <p className="text-gray-400 text-sm italic">
+              Select a driver to view requests
+            </p>
+          );
 
         return (
           <div className="flex flex-col gap-1">
+            {driverRequests.length === 0 && (
+              <p className="text-gray-400 italic text-sm">No requests found</p>
+            )}
+
             {driverRequests.map((req) => (
-              <label key={req.requestId} className="flex items-center gap-2">
+              <label
+                key={`req-${row.driverId}-${req.requestId}`}
+                className="flex items-center gap-2"
+              >
                 <input
                   type="checkbox"
-                  disabled={!isAnyDriverSelected}
+                  disabled={selectedDriverId !== row.driverId}
                   checked={
-                    driverAssignments[selectedDriverId]?.includes(
-                      req.requestId
-                    ) || false
+                    driverAssignments[row.driverId]?.includes(req.requestId) ||
+                    // if pickup already assigned to this driver, show checked
+                    (req.driverId &&
+                      req.driverId.toLowerCase() === row.driverId.toLowerCase())
                   }
                   onChange={() => {
-                    if (!isAnyDriverSelected) return;
-
                     setDriverAssignments((prev) => {
-                      const current = prev[selectedDriverId] || [];
-
+                      const current = prev[row.driverId] || [];
                       if (current.includes(req.requestId)) {
                         return {
                           ...prev,
-                          [selectedDriverId]: current.filter(
+                          [row.driverId]: current.filter(
                             (id) => id !== req.requestId
                           ),
                         };
                       } else {
                         return {
                           ...prev,
-                          [selectedDriverId]: [...current, req.requestId],
+                          [row.driverId]: [...current, req.requestId],
                         };
                       }
                     });
                   }}
                   className={`accent-[#003B36] w-[15px] h-[15px] rounded-[4px] ${
-                    !isAnyDriverSelected ? "opacity-50 cursor-not-allowed" : ""
+                    selectedDriverId !== row.driverId
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
                 />
-                <span className={!isAnyDriverSelected ? "opacity-50" : ""}>
+                <span
+                  className={
+                    selectedDriverId !== row.driverId ? "opacity-50" : ""
+                  }
+                >
                   {req.requestId}
                 </span>
               </label>
@@ -144,81 +180,101 @@ const DriverTableDataComp = ({ requests = [], actions = [] }) => {
         );
       },
     },
-    {
-      key: "store",
-      label: "Store",
-      render: (_, row) => {
-        const driverRequests = requests.filter(
-          (req) => req.driverId === row.driverId
-        );
-        return (
-          <div className="flex flex-col gap-1">
-            {driverRequests.map((req) => (
-              <div key={req.requestId}>{req.store}</div>
-            ))}
-          </div>
-        );
-      },
-    },
+
+    //  Pickup Location
     {
       key: "pickupLocation",
       label: "Pick-up Location",
       render: (_, row) => {
-        const driverRequests = requests.filter(
-          (req) => req.driverId === row.driverId
+        const driverRequests = pickups.filter(
+          (p) =>
+            (p.driverId && p.driverId.toLowerCase() === row.driverId.toLowerCase()) ||
+            (!p.driverId || p.driverId === null || p.driverId === undefined)
         );
+        if (!selectedDriverId)
+          return <p className="text-gray-400 italic text-sm">N/A</p>;
+
         return (
           <div className="flex flex-col gap-1">
             {driverRequests.map((req) => (
-              <div key={req.requestId}>{req.pickupLocation}</div>
+              <div key={`loc-${row.driverId}-${req.requestId}`}>
+                {req.pickupLocation || "—"}
+              </div>
             ))}
           </div>
         );
       },
     },
+
+    //  Pickup Date & Time
     {
       key: "pickupDateTime",
       label: "Pick-up Date & Time",
       render: (_, row) => {
-        const driverRequests = requests.filter(
-          (req) => req.driverId === row.driverId
+        const driverRequests = pickups.filter(
+          (p) =>
+            (p.driverId && p.driverId.toLowerCase() === row.driverId.toLowerCase()) ||
+            (!p.driverId || p.driverId === null || p.driverId === undefined)
         );
+        if (!selectedDriverId)
+          return <p className="text-gray-400 italic text-sm">N/A</p>;
+
         return (
           <div className="flex flex-col gap-1">
             {driverRequests.map((req) => (
-              <div key={req.requestId}>{req.pickupDateTime}</div>
+              <div key={`date-${row.driverId}-${req.requestId}`}>
+                {req.pickupDateTime || "—"}
+              </div>
             ))}
           </div>
         );
       },
     },
+
+    //  Request Type
     {
       key: "requestType",
       label: "Request Type",
       render: (_, row) => {
-        const driverRequests = requests.filter(
-          (req) => req.driverId === row.driverId
+        const driverRequests = pickups.filter(
+          (p) =>
+            (p.driverId && p.driverId.toLowerCase() === row.driverId.toLowerCase()) ||
+            (!p.driverId || p.driverId === null || p.driverId === undefined)
         );
+        if (!selectedDriverId)
+          return <p className="text-gray-400 italic text-sm">N/A</p>;
+
         return (
           <div className="flex flex-col gap-1">
             {driverRequests.map((req) => (
-              <div key={req.requestId}>{req.requestType}</div>
+              <div key={`type-${row.driverId}-${req.requestId}`}>
+                {req.requestType || "—"}
+              </div>
             ))}
           </div>
         );
       },
     },
+
+    //  Tyres count
     {
       key: "tyres",
       label: "Tyres",
       render: (_, row) => {
-        const driverRequests = requests.filter(
-          (req) => req.driverId === row.driverId
+        const driverRequests = pickups.filter(
+          (p) =>
+            (p.driverId && p.driverId.toLowerCase() === row.driverId.toLowerCase()) ||
+            (!p.driverId || p.driverId === null || p.driverId === undefined)
         );
+        if (!selectedDriverId)
+          return <p className="text-gray-400 italic text-sm">N/A</p>;
+
         return (
           <div className="flex flex-col gap-1">
             {driverRequests.map((req) => (
-              <div key={req.requestId}>{req.tyres}</div>
+              <div key={`tyre-${row.driverId}-${req.requestId}`}>
+                {req.tyres ?? 0}
+              </div>
             ))}
           </div>
         );
@@ -229,10 +285,10 @@ const DriverTableDataComp = ({ requests = [], actions = [] }) => {
   return (
     <TableDataComp
       columns={columns}
-      data={drivers}
+      data={filteredDrivers}
       actions={actions}
-      showRightBorder={true} //  right border only for this table
-      bottomBorderColor="border-gray-200" //  very light grey bottom border
+      showRightBorder={true}
+      bottomBorderColor="border-gray-200"
     />
   );
 };

@@ -9,7 +9,11 @@ import storeReducer from "./storeSlice";
 import invoiceReducer from "./invoiceSlice";
 import wtnsReducer from "./wtnsSlice";
 import roleReducer from "./roleSlice";
-
+import pickupReducer from "./pickupSlice";
+import pickupHistoryReducer from "./pickupHistorySlice";
+import driverListingReducer from "./driverListingSlice";
+import requestedPickupsReducer from "./requestedPickupsSlice";
+import dashboardReducer from "./dashboardSlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -21,6 +25,11 @@ const store = configureStore({
     invoices: invoiceReducer,
     wtns: wtnsReducer,
     role: roleReducer,
+    pickup: pickupReducer,
+    pickupHistory: pickupHistoryReducer,
+    driverListing: driverListingReducer,
+    requestedPickups: requestedPickupsReducer,
+    dashboard: dashboardReducer,
   },
 });
 

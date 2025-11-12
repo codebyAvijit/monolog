@@ -3,7 +3,7 @@
 /* Base container: match your MUI look */
 .my-rsuite .rs-picker {
   width: 100% !important;
-  max-width: 334px !important;
+  /* max-width: 334px !important; */
   height: 60px !important;
   border: 1px solid #e5e7eb !important; /* default gray border */
   border-radius: 8px !important;

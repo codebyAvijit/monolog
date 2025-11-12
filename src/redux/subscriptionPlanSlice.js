@@ -1,4 +1,3 @@
-// subscriptionPlanSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import dayjs from "dayjs";
 import {
@@ -15,13 +14,15 @@ const initialState = {
   error: null,
 };
 
+//Use plan_amount for amount, per_tyre_amount for extraCharges
+
 const transformApiData = (apiData) => {
   const items = apiData.items || apiData;
   return items.map((item) => ({
     id: item.id,
     planName: item.name,
     planType: item.plan_type,
-    amount: `£${item.per_tyre_amount}`,
+    amount: `£${item.plan_amount || 0}`, //  : Use plan_amount
     pickups: `${item.minimum_pickup} Standard, ${item.express_maximum_pickup} Express`,
     extraCharges: `£${item.per_tyre_amount} per tyre`,
     expressExtraCharges: `£${item.express_per_tyre_amount} per tyre`,
@@ -33,14 +34,19 @@ const transformApiData = (apiData) => {
   }));
 };
 
+//  : Send both plan_amount and per_tyre_amount
 const transformToApiData = (planData) => {
   const pickups = planData.pickups
     ? planData.pickups.split(",").map((s) => parseInt(s.trim()) || 0)
     : [0, 0];
+
   return {
     name: planData.planName,
     plan_type: planData.planType,
-    per_tyre_amount: parseFloat(planData.amount?.replace(/£/g, "") || 0),
+    plan_amount: parseFloat(planData.amount?.replace(/£/g, "") || 0), //  : Add plan_amount
+    per_tyre_amount: parseFloat(
+      planData.extraCharges?.replace(/£| per tyre/g, "") || 0
+    ), //  : Extract from extraCharges
     minimum_pickup: pickups[0] || 0,
     maximum_pickup: pickups[0] || 0,
     express_maximum_pickup: pickups[1] || 0,
@@ -62,7 +68,6 @@ export const fetchSubscriptionPlans = createAsyncThunk(
       const response = await GetData("/subscription-plans");
       return response.data;
     } catch (error) {
-      // console.error("Fetch error:", error);
       return rejectWithValue(error.response?.data || "Something went wrong");
     }
   }
@@ -76,7 +81,6 @@ export const createSubscriptionPlan = createAsyncThunk(
       const response = await PostData("/subscription-plans", apiData);
       return response.data;
     } catch (error) {
-      // console.error("Create error:", error);
       return rejectWithValue(error.response?.data || "Something went wrong");
     }
   }
@@ -88,10 +92,8 @@ export const updateSubscriptionPlan = createAsyncThunk(
     try {
       const apiData = transformToApiData(planData);
       const response = await PutData(`/subscription-plans/${id}`, apiData);
-      console.log("Update API Response:", response.data); // ADD THIS LINE
       return response.data;
     } catch (error) {
-      // console.error("Update error:", error);
       return rejectWithValue(error.response?.data || "Something went wrong");
     }
   }
@@ -104,7 +106,6 @@ export const deleteSubscriptionPlan = createAsyncThunk(
       await DeleteData(`/subscription-plans/${id}`);
       return id;
     } catch (error) {
-      // console.error("Delete error:", error);
       return rejectWithValue(error.response?.data || "Something went wrong");
     }
   }
@@ -136,14 +137,16 @@ const subscriptionPlanSlice = createSlice({
       .addCase(createSubscriptionPlan.fulfilled, (state, action) => {
         state.loading = false;
 
-        const createdData = action.payload.data || action.payload; // handles both response shapes
+        const createdData = action.payload.data || action.payload;
+
+        //  : Use plan_amount for amount, per_tyre_amount for extraCharges
         const newPlan = {
           id: createdData.id,
           planName: createdData.name,
           planType: createdData.plan_type,
-          amount: `£${createdData.per_tyre_amount}`,
+          amount: `£${createdData.plan_amount || 0}`, //
           pickups: `${createdData.minimum_pickup} Standard, ${createdData.express_maximum_pickup} Express`,
-          extraCharges: `£${createdData.per_tyre_amount} per tyre`,
+          extraCharges: `£${createdData.per_tyre_amount} per tyre`, //  CORRECT
           expressExtraCharges: `£${createdData.express_per_tyre_amount} per tyre`,
           status: createdData.active ? "Active" : "Inactive",
           createdOn: dayjs(createdData.created_at).format("DD-MM-YYYY"),
@@ -166,15 +169,16 @@ const subscriptionPlanSlice = createSlice({
       .addCase(updateSubscriptionPlan.fulfilled, (state, action) => {
         state.loading = false;
 
-        const updatedData = action.payload.data || action.payload; // supports both response structures
+        const updatedData = action.payload.data || action.payload;
         const index = state.plans.findIndex((p) => p.id === updatedData.id);
 
         if (index !== -1) {
+          //fix for updates
           const updatedPlan = {
             id: updatedData.id,
             planName: updatedData.name,
             planType: updatedData.plan_type,
-            amount: `£${updatedData.per_tyre_amount}`,
+            amount: `£${updatedData.plan_amount || 0}`,
             pickups: `${updatedData.minimum_pickup} Standard, ${updatedData.express_maximum_pickup} Express`,
             extraCharges: `£${updatedData.per_tyre_amount} per tyre`,
             expressExtraCharges: `£${updatedData.express_per_tyre_amount} per tyre`,
@@ -185,7 +189,7 @@ const subscriptionPlanSlice = createSlice({
               : null,
           };
 
-          state.plans[index] = updatedPlan; //  simpler and cleaner
+          state.plans[index] = updatedPlan;
           saveToLocalStorage(STORAGE_KEY, state.plans);
         }
       })

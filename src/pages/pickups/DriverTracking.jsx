@@ -1,39 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import infoIcon from "../../assets/icons/info.svg";
 import searchIcon from "../../assets/icons/search.svg";
 import redFlagIcon from "../../assets/icons/redFlag.svg";
 import locAdd from "../../assets/icons/locAdd.svg";
 import safety from "../../assets/images/safety.jpg";
-import sampleMap from "../../assets/images/sampleMap.jpg";
 import sendIcon from "../../assets/icons/send.svg";
 import timerClock from "../../assets/icons/timerClock.svg";
+import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
+import { GOOGLE_MAPS_LOADER_CONFIG } from "../../config/googleMapsConfig";
 
 const DriverTracking = () => {
   const [search, setSearch] = useState("");
   const [hoveredCard, setHoveredCard] = useState(null);
   const [isFlagActivated, setIsFlagActivated] = useState(false);
   const [isFlagSafetyClicked, setIsFlagSafetyClicked] = useState(false);
-
-  // STORE CHATS
   const [activeTab, setActiveTab] = useState("Store 1");
   const [messages, setMessages] = useState(
     JSON.parse(localStorage.getItem("chatMessages")) || {}
   );
   const [newMessage, setNewMessage] = useState("");
 
-  // Save messages to localStorage on update
-  useEffect(() => {
-    localStorage.setItem("chatMessages", JSON.stringify(messages));
-  }, [messages]);
+  const mapRef = useRef(null);
+  const mapCenter = { lat: 51.509865, lng: -0.118092 }; // London
 
-  const handleSend = () => {
-    if (!newMessage.trim()) return;
-    setMessages((prev) => ({
-      ...prev,
-      [activeTab]: [...(prev[activeTab] || []), newMessage],
-    }));
-    setNewMessage("");
-  };
+  //  Load Google Maps JS API from centralized config
+  const { isLoaded } = useJsApiLoader(GOOGLE_MAPS_LOADER_CONFIG);
 
   const driverDetails = [
     {
@@ -76,9 +67,7 @@ const DriverTracking = () => {
       payment: "£29.99",
       tyreCount: 30,
       address: "47 Baker Street, London, W1U 8ED",
-      vehicleName: "Truck A",
-      maxCapacity: 150,
-      selectedTyres: 110,
+      position: { lat: 51.5225, lng: -0.1571 },
     },
     {
       storeName: "Store 2",
@@ -86,9 +75,7 @@ const DriverTracking = () => {
       status: "En-route",
       tyreCount: 50,
       address: "12 High Street, Manchester, M1 4AB",
-      vehicleName: "Truck B",
-      maxCapacity: 120,
-      selectedTyres: 80,
+      position: { lat: 53.4808, lng: -2.2426 },
     },
     {
       storeName: "Store 3",
@@ -96,10 +83,14 @@ const DriverTracking = () => {
       status: "Scheduled",
       tyreCount: 100,
       address: "88 King's Road, Birmingham, B15 2TH",
-      vehicleName: "Truck C",
-      maxCapacity: 160,
-      selectedTyres: 120,
+      position: { lat: 52.4539, lng: -1.9372 },
     },
+  ];
+
+  const tabs = [
+    { name: "Store 1", path: "store1" },
+    { name: "Store 2", path: "store2" },
+    { name: "Store 3", path: "store3" },
   ];
 
   const requestTypeStyles = {
@@ -120,13 +111,21 @@ const DriverTracking = () => {
     "En-route": "bg-[#FFFFFF]",
   };
 
-  const tabs = [
-    { name: "Store 1", path: "store1" },
-    { name: "Store 2", path: "store2" },
-    { name: "Store 3", path: "store3" },
-  ];
+  // 💬 Chat handling
+  useEffect(() => {
+    localStorage.setItem("chatMessages", JSON.stringify(messages));
+  }, [messages]);
 
-  // Filter logic for red flag / filter driver on search basis
+  const handleSend = () => {
+    if (!newMessage.trim()) return;
+    setMessages((prev) => ({
+      ...prev,
+      [activeTab]: [...(prev[activeTab] || []), newMessage],
+    }));
+    setNewMessage("");
+  };
+
+  // 🔍 Filter Drivers
   const filteredDrivers = driverDetails.filter((driver) => {
     const matchesSearch = driver.driverName
       .toLowerCase()
@@ -135,11 +134,39 @@ const DriverTracking = () => {
     return matchesSearch && matchesFlag;
   });
 
+  //  Add Advanced Markers once map is loaded
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current) return;
+
+    (async () => {
+      const { AdvancedMarkerElement } = await window.google.maps.importLibrary(
+        "marker"
+      );
+
+      tripDetails.forEach((trip, idx) => {
+        const markerLabel = document.createElement("div");
+        markerLabel.style.background = "#003B36";
+        markerLabel.style.color = "white";
+        markerLabel.style.padding = "4px 8px";
+        markerLabel.style.borderRadius = "4px";
+        markerLabel.style.fontSize = "12px";
+        markerLabel.textContent = `${idx + 1}`;
+
+        new AdvancedMarkerElement({
+          map: mapRef.current,
+          position: trip.position,
+          title: trip.storeName,
+          content: markerLabel,
+        });
+      });
+    })();
+  }, [isLoaded]);
+
   return (
     <div className="flex flex-col xl:flex-row gap-5">
-      {/* LEFT PANEL - Driver List & Safety */}
+      {/* LEFT PANEL */}
       <div className="flex flex-col gap-5 w-full xl:w-auto">
-        {/* Driver List Panel */}
+        {/* Driver List */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 w-full xl:w-[326px]">
           <div className="flex items-center mb-3 gap-2">
             <input
@@ -166,7 +193,7 @@ const DriverTracking = () => {
             <img src={searchIcon} alt="search" className="w-4 h-4" />
           </div>
 
-          {/* Driver List */}
+          {/* Driver List Items */}
           <div className="flex flex-col gap-3 max-h-[340px] overflow-y-auto pr-1">
             {filteredDrivers.map((driver, index) => (
               <div
@@ -206,7 +233,7 @@ const DriverTracking = () => {
           </div>
         </div>
 
-        {/* SAFETY PANEL */}
+        {/* Safety Panel */}
         <div className="w-full xl:w-[326px] min-h-[303px] flex flex-col border border-gray-200 rounded-2xl bg-white shadow-sm">
           <p className="text-lg md:text-[20px] mt-5 ml-5 text-[#012622] font-semibold">
             Flag/Safety Stop
@@ -238,16 +265,28 @@ const DriverTracking = () => {
 
       {/* MIDDLE PANEL - Map + Trips */}
       <div className="flex flex-col w-full xl:flex-1">
-        {/* Map */}
-        <div className="w-full">
-          <img
-            src={sampleMap}
-            className="w-full h-[300px] md:h-[433px] object-cover rounded-2xl"
-            alt="Map"
-          />
+        {/* Google Map */}
+        <div className="relative w-full h-[300px] md:h-[433px] rounded-2xl overflow-hidden shadow-sm">
+          {isLoaded ? (
+            <GoogleMap
+              onLoad={(map) => (mapRef.current = map)}
+              mapContainerClassName="absolute inset-0 w-full h-full rounded-2xl"
+              center={mapCenter}
+              zoom={6}
+              options={{
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-gray-100 text-gray-500">
+              Loading map...
+            </div>
+          )}
         </div>
 
-        {/* TRIP CARDS */}
+        {/* Trip Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-11.5">
           {tripDetails.map((trip, index) => (
             <div
@@ -263,21 +302,19 @@ const DriverTracking = () => {
                   <p
                     className={`${
                       requestTypeStyles[trip.requestType] || "bg-gray-100"
-                    } 
-                    px-3 py-1 rounded-md text-xs font-medium`}
+                    } px-3 py-1 rounded-md text-xs font-medium`}
                   >
                     {trip.requestType}
                   </p>
                   <div
                     className={`${
                       requestStatusType[trip.status] || "bg-[#EFF3F8]"
-                    } 
-                    text-center rounded-[30px] px-3 py-1 text-xs font-medium flex items-center justify-center`}
+                    } text-center rounded-[30px] px-3 py-1 text-xs font-medium`}
                   >
                     {trip.status}
                   </div>
 
-                  {/* Clean Tooltip */}
+                  {/* Tooltip */}
                   {trip.status === "Completed" && (
                     <div
                       className="relative"
@@ -289,16 +326,8 @@ const DriverTracking = () => {
                         className="w-4 h-4 cursor-pointer"
                         alt="Info"
                       />
-
                       {hoveredCard === index && (
-                        <div
-                          className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 
-                                   rounded-lg w-[199px] p-4 bg-white shadow-lg z-50 
-                                   text-[12px] text-gray-700 flex flex-col justify-center items-center gap-2 
-                                   before:content-[''] before:absolute before:top-full before:left-1/2 
-                                   before:-translate-x-1/2 before:border-8 before:border-transparent 
-                                   before:border-t-white"
-                        >
+                        <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 rounded-lg w-[199px] p-4 bg-white shadow-lg z-50 text-[12px] text-gray-700 flex flex-col justify-center items-center gap-2 before:content-[''] before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-8 before:border-transparent before:border-t-white">
                           <p>Tyres: {trip.tyreCount}</p>
                           <p>Payment: {trip.payment}</p>
                           <p className="underline cursor-pointer">
@@ -311,7 +340,6 @@ const DriverTracking = () => {
                   )}
                 </div>
               </div>
-
               <p className="px-3 pb-2 text-sm text-gray-700">
                 {trip.tyreCount} Tyres to be picked up
               </p>
@@ -326,7 +354,6 @@ const DriverTracking = () => {
 
       {/* RIGHT PANEL - Chat Section */}
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-col w-full xl:w-[400px] 2xl:w-[600px] h-[600px] xl:h-[811px]">
-        {/* Tabs */}
         <div className="flex gap-6 md:gap-12 border-b mb-6 overflow-x-auto">
           {tabs.map((tab) => (
             <button
@@ -361,7 +388,7 @@ const DriverTracking = () => {
           )}
         </div>
 
-        {/* Input with send icon inside */}
+        {/* Input */}
         <div className="mt-3 flex items-center border border-gray-300 rounded-lg px-3 py-2">
           <input
             type="text"

@@ -1,4 +1,4 @@
-// Import necessary libraries and components
+// src/layouts/Nav.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -7,50 +7,45 @@ import NoticationsPopUp from "./NoticationsPopUp";
 import bellIcon from "../assets/icons/bell.svg";
 import { logout } from "../redux/authSlice";
 
+const NAV_HEIGHT = 64; // 64px = h-16 (just for reference)
+
 const Nav = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [isProfileClicked, setIsProfileClicked] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const [notificationsArray, setNotificationsArray] = useState([
-    {
-      messageTitle: "Your have a new message from Yin",
-      messageContent:
-        "Hello there, check this new items in from the your may interested from the motion school.",
-      timeLapse: "10 minutes ago",
-      isRead: false,
-    },
-    {
-      messageTitle: "Your have a new message from Yin",
-      messageContent:
-        "Hello there, check this new items in from the your may interested from the motion school.",
-      timeLapse: "10 minutes ago",
-      isRead: false,
-    },
-    {
-      messageTitle: "Your have a new message from Yin",
-      messageContent:
-        "Hello there, check this new items in from the your may interested from the motion school.",
-      timeLapse: "10 minutes ago",
-      isRead: true,
-    },
-    {
-      messageTitle: "Your have a new message from Yin",
-      messageContent:
-        "Hello there, check this new items in from the your may interested from the motion school.",
-      timeLapse: "10 minutes ago",
-      isRead: false,
-    },
-  ]);
+  const [isMobile, setIsMobile] = useState(false);
   const [isNotificationIconClicked, setIsNotificationIconClicked] =
     useState(false);
   const [notificationsCleared, setNotificationsCleared] = useState(false);
 
-  // Refs for click outside detection
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
-  const handeLogout = async () => {
+  const [notificationsArray, setNotificationsArray] = useState([
+    {
+      messageTitle: "New message from Yin",
+      messageContent:
+        "Hello there! Check out these new items you might be interested in.",
+      timeLapse: "10 minutes ago",
+      isRead: false,
+    },
+    {
+      messageTitle: "Weekly Pickup Update",
+      messageContent: "Your weekly report for Store 3 is ready.",
+      timeLapse: "30 minutes ago",
+      isRead: false,
+    },
+    {
+      messageTitle: "Payment Confirmed",
+      messageContent: "Payment received for your last pickup batch.",
+      timeLapse: "1 hour ago",
+      isRead: true,
+    },
+  ]);
+
+  const handleLogout = async () => {
     try {
       await dispatch(logout()).unwrap();
       navigate("/");
@@ -61,14 +56,13 @@ const Nav = () => {
   };
 
   const navLinkClasses = ({ isActive }) =>
-    `block px-4 py-2 rounded-md transition-colors duration-200
-      ${
-        isActive
-          ? "bg-[#012622] text-white"
-          : "text-black hover:bg-[#012622] hover:text-white"
-      }`;
+    `block px-4 py-2 rounded-md text-sm lg:text-base transition-colors duration-200 ${
+      isActive
+        ? "bg-[#012622] text-white"
+        : "text-gray-800 hover:bg-[#012622] hover:text-white"
+    }`;
 
-  // Close dropdowns when clicking outside
+  // close popups on outside click + detect mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -82,21 +76,37 @@ const Nav = () => {
       }
     };
 
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handleResize = () => setIsMobile(mq.matches);
+    handleResize();
+    mq.addEventListener("change", handleResize);
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
+      mq.removeEventListener("change", handleResize);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
-    <nav className="relative w-full bg-white shadow-md px-4 py-3 flex items-center justify-between z-50">
+    <nav
+      className="
+        fixed top-0 left-0 w-full
+        bg-white/95 backdrop-blur
+        shadow-md
+        px-4 md:px-8
+        h-16
+        flex items-center justify-between
+        z-[1000]
+      "
+    >
       {/* Left: Logo */}
       <div className="flex items-center">
         <LogoComp variant="nav" />
       </div>
 
-      {/* Center: Navigation Links - Hidden on mobile, shown on desktop */}
-      <ul className="hidden md:flex space-x-6 font-medium">
+      {/* Center: main nav (desktop) */}
+      <ul className="hidden md:flex space-x-4 lg:space-x-6 xl:space-x-10 font-medium">
         <li>
           <NavLink to="/dashboard" className={navLinkClasses}>
             Dashboard
@@ -119,84 +129,64 @@ const Nav = () => {
         </li>
       </ul>
 
-      {/* Right: Notification + User Avatar + Mobile Menu Button */}
-      <div className="flex items-center space-x-4">
-        {/* Notification Icon with badge */}
+      {/* Right: notifications + profile + burger */}
+      <div className="flex items-center gap-3 sm:gap-5 relative">
+        {/* Notifications */}
         <div className="relative" ref={notificationRef}>
           <button
-            className="relative cursor-pointer focus:outline-none p-1"
             onClick={() => {
-              setIsNotificationIconClicked(!isNotificationIconClicked);
-              if (!isNotificationIconClicked) {
-                setNotificationsCleared(true);
-              }
+              setIsNotificationIconClicked((p) => !p);
+              if (!isNotificationIconClicked) setNotificationsCleared(true);
             }}
-            aria-label="Toggle notifications"
+            className="relative cursor-pointer focus:outline-none p-1"
           >
-            <img
-              src={bellIcon}
-              alt="Notifications"
-              className="w-6 h-6 pointer-events-none"
-            />
-
-            {/* Show badge only if dropdown not opened and not cleared */}
+            <img src={bellIcon} alt="Notifications" className="w-6 h-6" />
             {!isNotificationIconClicked && !notificationsCleared && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center pointer-events-none">
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {notificationsArray.length}
               </span>
             )}
           </button>
 
-          {/* Conditional Pop-up */}
+          {/* dropdown (desktop) */}
           {isNotificationIconClicked && (
-            <NoticationsPopUp
-              notificationsArray={notificationsArray}
-              setNotificationsArray={setNotificationsArray}
-            />
+            <div className="absolute right-0 top-9 z-[3000] animate-fadeSlide">
+              <NoticationsPopUp
+                notificationsArray={notificationsArray}
+                setNotificationsArray={setNotificationsArray}
+                onClose={() => setIsNotificationIconClicked(false)}
+                isMobileDialog={isMobile}
+              />
+            </div>
           )}
         </div>
 
-        {/* User Avatar */}
+        {/* Profile */}
         <div className="relative" ref={profileRef}>
           <button
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-[#012622] text-white font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#012622] focus:ring-offset-2"
-            onClick={() => setIsProfileClicked(!isProfileClicked)}
-            aria-label="Toggle profile menu"
+            onClick={() => setIsProfileClicked((p) => !p)}
+            className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center rounded-full bg-[#012622] text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#012622]"
           >
             R
           </button>
 
-          {/* Profile Popup */}
           {isProfileClicked && (
-            <div className="absolute right-0 mt-2 w-[220px] bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-[1000]">
-              {/* Username */}
+            <div className="absolute right-0 mt-3 w-[220px] bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-[3100] animate-fadeSlide">
               <div className="flex items-center gap-2 mb-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-5 h-5 text-[#012622]"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 1115 0H4.5z"
-                  />
-                </svg>
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#012622] text-white text-sm">
+                  R
+                </span>
                 <p className="text-sm font-medium text-gray-800">John Smith</p>
               </div>
 
-              {/* Last Login */}
               <div className="flex items-center gap-2 mb-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
                   className="w-5 h-5 text-[#012622]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
                 >
                   <path
                     strokeLinecap="round"
@@ -205,22 +195,21 @@ const Nav = () => {
                   />
                 </svg>
                 <p className="text-xs text-gray-600">
-                  Last Login : 2/26/2025 2:17:55 AM
+                  Last Login: 2/26/2025 2:17 AM
                 </p>
               </div>
 
-              {/* Logout */}
               <button
-                className="flex items-center gap-2 text-[#E63946] cursor-pointer hover:text-red-600 transition w-full"
-                onClick={handeLogout}
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-[#E63946] hover:text-red-700 transition-colors w-full"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
                   className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
                 >
                   <path
                     strokeLinecap="round"
@@ -234,18 +223,12 @@ const Nav = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
+        {/* Mobile menu button */}
         <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden text-gray-700 hover:text-gray-900 focus:outline-none"
-          aria-label="Toggle menu"
+          onClick={() => setIsMobileMenuOpen((p) => !p)}
+          className="md:hidden text-gray-700 focus:outline-none"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-7 h-7" fill="none" stroke="currentColor">
             {isMobileMenuOpen ? (
               <path
                 strokeLinecap="round"
@@ -265,45 +248,20 @@ const Nav = () => {
         </button>
       </div>
 
-      {/* Mobile Menu - Shown when hamburger is clicked */}
+      {/* Mobile menu (drops under navbar) */}
       {isMobileMenuOpen && (
-        <ul className="absolute top-full left-0 w-full bg-white shadow-lg py-2 md:hidden z-50 border-t border-gray-200">
-          <li>
-            <NavLink
-              to="/dashboard"
-              className={navLinkClasses}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Dashboard
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/pickups"
-              className={navLinkClasses}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Pickups
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/store"
-              className={navLinkClasses}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Store
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/setting"
-              className={navLinkClasses}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Settings
-            </NavLink>
-          </li>
+        <ul className="absolute top-16 left-0 w-full bg-white shadow-lg py-3 md:hidden z-[2000] border-t border-gray-200 animate-fadeSlide">
+          {["dashboard", "pickups", "store", "setting"].map((item) => (
+            <li key={item}>
+              <NavLink
+                to={`/${item}`}
+                className={navLinkClasses}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </NavLink>
+            </li>
+          ))}
         </ul>
       )}
     </nav>

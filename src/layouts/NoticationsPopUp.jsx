@@ -1,139 +1,160 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const NoticationsPopUp = ({ notificationsArray, setNotificationsArray }) => {
+const NoticationsPopUp = ({
+  notificationsArray,
+  setNotificationsArray,
+  onClose,
+  isMobileDialog,
+}) => {
   const navigate = useNavigate();
 
+  // Handle navigation to all notifications
   const handleViewAllNotifications = () => {
     navigate("/viewallnotications");
+    onClose?.();
   };
 
   // Mark single notification as read
   const markAsRead = (index) => {
-    const updatedNotifications = [...notificationsArray];
-    updatedNotifications[index].isRead = true;
-    setNotificationsArray(updatedNotifications);
+    const updated = [...notificationsArray];
+    updated[index].isRead = true;
+    setNotificationsArray(updated);
   };
 
   // Mark all as read
   const markAllAsRead = () => {
-    const updatedNotifications = notificationsArray.map((noti) => ({
-      ...noti,
-      isRead: true,
-    }));
-    setNotificationsArray(updatedNotifications);
+    const updated = notificationsArray.map((n) => ({ ...n, isRead: true }));
+    setNotificationsArray(updated);
   };
 
-  // Count unread notifications
-  const unreadCount = notificationsArray.filter((noti) => !noti.isRead).length;
+  const unreadCount = notificationsArray.filter((n) => !n.isRead).length;
 
-  return (
-    <div className="relative w-full sm:w-max mx-auto">
-      <div
-        id="dropdownMenu"
-        className="absolute right-0 shadow-lg bg-white py-4 z-[1000] rounded-lg w-[calc(100vw-2rem)] sm:w-[380px] md:w-[420px] max-w-[95vw] max-h-[500px] overflow-auto mt-2"
-        role="menu"
-        aria-label="Notifications"
-      >
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between px-4 mb-4 gap-2">
-          <h1 className="font-semibold text-gray-900 text-base">
-            Notifications {unreadCount > 0 && `(${unreadCount})`}
-          </h1>
+  const content = (
+    <div
+      className={`shadow-lg bg-white py-4 z-[3200] rounded-xl
+        w-[90vw] sm:w-[380px] md:w-[420px] lg:w-[460px]
+        max-h-[80vh] overflow-auto relative border border-gray-100
+        animate-fadeSlide
+        ${isMobileDialog ? "fixed inset-x-4 top-15 mx-auto mr-10" : ""}
+      `}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 mb-3">
+        <h1 className="font-semibold text-gray-900 text-base md:text-lg">
+          Notifications {unreadCount > 0 && `(${unreadCount})`}
+        </h1>
+
+        <div className="flex items-center gap-3">
           {unreadCount > 0 && (
             <button
-              className="text-xs sm:text-sm text-[#E98A15] font-medium cursor-pointer hover:text-[#D97706] transition-colors px-2 py-1 rounded hover:bg-orange-50"
               onClick={markAllAsRead}
-              aria-label="Mark all notifications as read"
+              className="text-xs md:text-sm text-[#E98A15] font-medium hover:text-[#D97706] focus:outline-none focus:ring-1 focus:ring-[#E98A15] rounded px-1"
             >
               Mark all as read
             </button>
           )}
-        </div>
 
-        {/* Notifications List */}
-        {notificationsArray.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-slate-500 text-sm">No notifications</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-200" role="list">
-            {notificationsArray.map((singleNoti, index) => (
-              <li
-                key={index}
-                className={`p-4 flex items-start gap-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-                  !singleNoti.isRead ? "bg-blue-50" : ""
-                }`}
-                onClick={() => {
-                  markAsRead(index);
-                  navigate("/viewallnotications");
-                }}
-                role="menuitem"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    markAsRead(index);
-                    navigate("/viewallnotications");
-                  }
-                }}
-              >
-                {/* Notification Content */}
-                <div className="flex-1 min-w-0">
+          {/* Close Button for all screen types */}
+          <button
+            onClick={onClose}
+            aria-label="Close notifications"
+            className="text-gray-400 hover:text-gray-700 text-xl md:text-2xl leading-none focus:outline-none focus:ring-1 focus:ring-gray-300 rounded"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      {/* Notification List */}
+      {notificationsArray.length === 0 ? (
+        <div className="px-4 py-8 text-center text-gray-500 text-sm">
+          No notifications
+        </div>
+      ) : (
+        <ul className="divide-y divide-gray-200">
+          {notificationsArray.map((n, i) => (
+            <li
+              key={i}
+              className={`group p-4 flex items-start gap-3 hover:bg-gray-50 transition ${
+                !n.isRead ? "bg-blue-50" : ""
+              }`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start">
                   <h3
-                    className={`text-sm leading-snug ${
-                      !singleNoti.isRead
+                    className={`text-sm md:text-base ${
+                      !n.isRead
                         ? "text-slate-900 font-semibold"
                         : "text-slate-700 font-medium"
                     }`}
                   >
-                    {singleNoti.messageTitle}
+                    {n.messageTitle}
                   </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed mt-1.5 line-clamp-2">
-                    {singleNoti.messageContent}
-                  </p>
-                  <p className="text-xs text-[#012622] font-medium mt-2">
-                    {singleNoti.timeLapse}
-                  </p>
-                </div>
 
-                {/* Unread Dot Indicator at the End */}
-                <div className="flex-shrink-0 pt-1">
-                  {!singleNoti.isRead && (
-                    <div
-                      className="w-2 h-2 bg-[#E98A15] rounded-full"
-                      aria-label="Unread notification"
-                    ></div>
+                  {/* Mark as read button */}
+                  {!n.isRead && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markAsRead(i);
+                      }}
+                      className="text-xs text-[#E98A15] hover:text-[#D97706] focus:outline-none focus:ring-1 focus:ring-[#E98A15] rounded px-1"
+                    >
+                      Mark as read
+                    </button>
                   )}
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
 
-        {/* Footer Actions */}
-        {notificationsArray.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-4 mt-4 gap-2">
-            <button
-              className="text-sm text-[#E98A15] font-medium cursor-pointer hover:text-[#D97706] transition-colors px-3 py-2 rounded hover:bg-orange-50 text-center sm:text-left"
-              onClick={() => {
-                setNotificationsArray([]);
-              }}
-              aria-label="Clear all notifications"
-            >
-              Clear all
-            </button>
-            <button
-              className="text-sm px-4 py-2 bg-[#E98A15] rounded hover:bg-[#D97706] text-white cursor-pointer transition-colors font-medium"
-              onClick={handleViewAllNotifications}
-            >
-              View All
-            </button>
-          </div>
-        )}
-      </div>
+                <p className="text-xs md:text-sm text-slate-500 mt-1.5 line-clamp-2">
+                  {n.messageContent}
+                </p>
+                <p className="text-xs text-[#012622] font-medium mt-2">
+                  {n.timeLapse}
+                </p>
+              </div>
+
+              {!n.isRead && (
+                <div
+                  className="w-2 h-2 bg-[#E98A15] rounded-full mt-1"
+                  aria-label="Unread notification"
+                ></div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Footer */}
+      {notificationsArray.length > 0 && (
+        <div className="flex justify-between items-center px-4 mt-4">
+          <button
+            className="text-sm text-[#E98A15] hover:text-[#D97706] focus:outline-none focus:ring-1 focus:ring-[#E98A15] rounded px-2"
+            onClick={() => setNotificationsArray([])}
+          >
+            Clear
+          </button>
+          <button
+            onClick={handleViewAllNotifications}
+            className="text-sm px-4 py-2 bg-[#E98A15] rounded-md text-white hover:bg-[#D97706] focus:outline-none focus:ring-2 focus:ring-[#E98A15] focus:ring-offset-1"
+          >
+            View All
+          </button>
+        </div>
+      )}
     </div>
   );
+
+  // Modal behavior for mobile
+  if (isMobileDialog) {
+    return (
+      <div className="fixed inset-0 bg-black/40 z-[3100] flex items-start justify-center">
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 };
 
 export default NoticationsPopUp;
